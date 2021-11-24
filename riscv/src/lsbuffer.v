@@ -156,7 +156,6 @@ end
 
 `define pos (v1_que[head] + imm_que[head]);
 reg                         busy_for_read;
-reg                         dirty_read;
 reg                         busy_for_write;
 reg [`InstrIdWidth-1:0]     read_type;
 reg [`ROBIdxWidth-1:0]      rob_pos_for_read;
@@ -201,21 +200,16 @@ always @(posedge clk_in) begin
         if (alloc_to_lsb_r_gr_in && busy_for_read)
             lsb_to_alloc_r_en_out <= `FALSE;
         if (alloc_to_lsb_r_en_in && busy_for_read) begin
-            if (dirty_read) begin
-                dirty_read <= `FALSE;
-            end
-            else begin
-                res_out <= lsb_d_in;
-                if (read_type == `LB)
-                    res_out <= {{24{lsb_d_in[7]}}, lsb_d_in[7:0]};
-                if (read_type == `LH)
-                    res_out <= {{16{lsb_d_in[15]}}, lsb_d_in[15:0]};
-                rob_pos_r_out <= rob_pos_for_read;
-                lsb_to_rob_r_en_out <= `TRUE;
-                lsb_to_rs_en_out <= `TRUE;
-                lsb_to_lsb_en_out <= `TRUE;
-                busy_for_read <= `FALSE;
-            end
+            res_out <= lsb_d_in;
+            if (read_type == `LB)
+                res_out <= {{24{lsb_d_in[7]}}, lsb_d_in[7:0]};
+            if (read_type == `LH)
+                res_out <= {{16{lsb_d_in[15]}}, lsb_d_in[15:0]};
+            rob_pos_r_out <= rob_pos_for_read;
+            lsb_to_rob_r_en_out <= `TRUE;
+            lsb_to_rs_en_out <= `TRUE;
+            lsb_to_lsb_en_out <= `TRUE;
+            busy_for_read <= `FALSE;
         end
     end
 end
@@ -225,7 +219,6 @@ always @(posedge clk_in) begin
         busy_for_write <= `FALSE;
         lsb_to_rob_w_en_out <= `FALSE;
         lsb_to_alloc_w_en_out <= `FALSE;
-        dirty_read <= `FALSE;
     end
     else if (rdy_in) begin
         lsb_to_rob_w_en_out <= `FALSE;
@@ -275,8 +268,6 @@ always @(posedge clk_in) begin
                 tail <= `ZERO;
                 busy_status <= `ZERO;
             end
-            if (busy_for_read && !alloc_to_lsb_r_en_in)
-                dirty_read <= `TRUE;
             busy_for_read <= `FALSE;
             lsb_to_rs_en_out <= `FALSE;
             lsb_to_lsb_en_out <= `FALSE;

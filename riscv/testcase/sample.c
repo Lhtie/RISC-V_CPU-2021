@@ -1,11 +1,9 @@
 #include "io.h"
-int main()
-{
-    double x = 1;
-    for (int i = 0; i < 3; i++)
-    {
-        outl(x);
-        x = (x + 3/x)/2;
-    }
-    
+
+int A = 48271;
+int M = 2147483647;
+
+int main(){
+    outlln(M / A);
+    return 0;
 }

@@ -31,7 +31,6 @@ reg [`IFIdxWidth-1:0]   head, tail;
 reg [`InstrWidth-1:0]   fetch_que[`IFQueueSize-1:0];
 reg [`AddrWidth-1:0]    pc_que[`IFQueueSize-1:0];
 reg                     busy_for_read;
-reg                     dirty_read;
 
 
 always @(posedge clk_in) begin
@@ -41,68 +40,66 @@ always @(posedge clk_in) begin
         empty <= `TRUE;
         if_to_pc_en_out <= `FALSE;
         if_to_alloc_en_out <= `FALSE;
+        if_to_issue_en_out <= `FALSE;
         busy_for_read <= `FALSE;
     end
     else if (rdy_in && !clear_branch_in) begin
         if_to_pc_en_out <= `FALSE;
+        if_to_issue_en_out <= `FALSE;
         if (pc_to_if_en_in && (empty || head != tail) && !busy_for_read) begin
             busy_for_read <= `TRUE;
             if_to_alloc_en_out <= `TRUE;
-            pc_que[tail] <= pc_in;
         end
         if (alloc_to_if_gr_in && busy_for_read)
             if_to_alloc_en_out <= `FALSE;
         if (alloc_to_if_en_in) begin
-            if (dirty_read) begin
-                dirty_read <= `FALSE;
-            end
-            else begin
-                if_to_pc_en_out <= `TRUE;
-                fetch_que[tail] <= if_d_in;
-                tail <= tail + `IFIdxWidth'b1;
-                empty <= `FALSE;
-                busy_for_read <= `FALSE;
+            if_to_pc_en_out <= `TRUE;
+            fetch_que[tail] <= if_d_in;
+            pc_que[tail] <= pc_in;
+            tail <= tail + `IFIdxWidth'b1;
+            empty <= `FALSE;
+            busy_for_read <= `FALSE;
+
+            // issue the newest instr
+            if (issue_to_if_en_in && head + `IFIdxWidth'b1 == tail
+                || !issue_to_if_en_in && empty) 
+            begin
+                if_to_issue_en_out <= `TRUE;
+                instr_out <= if_d_in;
+                pc_out <= pc_in;
             end
         end
-    end
-end
 
-always @(posedge clk_in) begin
-    if (rst_in) begin
-        if_to_issue_en_out <= `FALSE;
-    end
-    else if (rdy_in && !clear_branch_in) begin
-        if_to_issue_en_out <= `FALSE;
+        // try to issue
         if (issue_to_if_en_in) begin
             head <= head + `IFIdxWidth'b1;
             if (alloc_to_if_en_in)
                 empty <= head == tail;
             else empty <= head + `IFIdxWidth'b1 == tail;
-            if_to_issue_en_out <= head + `IFIdxWidth'b1 != tail;
-            instr_out <= fetch_que[head + `IFIdxWidth'b1];
-            pc_out <= pc_que[head + `IFIdxWidth'b1];
+            if (head + `IFIdxWidth'b1 != tail) begin
+                if_to_issue_en_out <= `TRUE;
+                instr_out <= fetch_que[head + `IFIdxWidth'b1];
+                pc_out <= pc_que[head + `IFIdxWidth'b1];
+            end
         end
         else  begin
-            if_to_issue_en_out <= !empty;
-            instr_out <= fetch_que[head];
-            pc_out <= pc_que[head];
+            if (!empty) begin
+                if_to_issue_en_out <= `TRUE;
+                instr_out <= fetch_que[head];
+                pc_out <= pc_que[head];
+            end
         end
     end
 end
 
 always @(posedge clk_in) begin
-    if (rst_in) begin
-        dirty_read <= `FALSE;
-    end
-    else if (rdy_in && clear_branch_in) begin
+    if (!rst_in && rdy_in && clear_branch_in) begin
         head <= `ZERO;
         tail <= `ZERO;
         empty <= `TRUE;
         if_to_pc_en_out <= `FALSE;
         if_to_alloc_en_out <= `FALSE;
         if_to_issue_en_out <= `FALSE;
-        if (busy_for_read && !alloc_to_if_en_in)
-            dirty_read <= `TRUE;
         busy_for_read <= `FALSE;
     end
 end

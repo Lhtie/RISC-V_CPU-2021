@@ -81,6 +81,8 @@ Alloc alloc0(
   .alloc_to_lsb_w_gr_out        (alloc_to_lsb_w_gr),
   .alloc_to_lsb_w_en_out        (alloc_to_lsb_w_en),
 
+  .clear_branch_in              (clear_branch),
+
   .mem_d_in                     (mem_din),
   .mem_a_out                    (mem_a),
   .mem_d_out                    (mem_dout),

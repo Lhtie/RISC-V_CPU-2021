@@ -29,6 +29,8 @@ module Alloc (
     input   wire [`WordWidth-1:0]       lsb_d_in,
     output  wire                        alloc_to_lsb_w_gr_out,
     output  reg                         alloc_to_lsb_w_en_out,
+
+    input   wire                        clear_branch_in,
     
     // mem interface
     input   wire [`MemDataWidth-1:0]    mem_d_in,
@@ -85,7 +87,7 @@ always @(posedge clk_in) begin
         mem_d_out <= `ZERO;
         mem_wr_out <= `FALSE;
     end
-    else if (rdy_in && alloc_free) begin
+    else if (rdy_in && alloc_free && !clear_branch_in) begin
         grant_if <= `FALSE;
         grant_lsb_r <= `FALSE;
         grant_lsb_w <= `FALSE;
@@ -119,7 +121,7 @@ always @(posedge clk_in) begin
         cur_send_pos <= `ZERO;
         alloc_to_lsb_w_en_out <= `FALSE;
     end
-    else if (rdy_in) begin
+    else if (rdy_in && !clear_branch_in) begin
         alloc_to_lsb_w_en_out <= `FALSE;
         if (!alloc_free) begin
             mem_a_out <= `ZERO;
@@ -172,7 +174,7 @@ always @(posedge clk_in) begin
         alloc_to_if_en_out <= `FALSE;
         alloc_to_lsb_r_en_out <= `FALSE;
     end
-    else if (rdy_in) begin
+    else if (rdy_in && !clear_branch_in) begin
         alloc_to_if_en_out <= `FALSE;
         alloc_to_lsb_r_en_out <= `FALSE;
         receive_if <= grant_if;
@@ -209,6 +211,24 @@ always @(posedge clk_in) begin
                 alloc_to_lsb_r_en_out <= `TRUE;
             end
         end
+    end
+end
+
+always @(posedge clk_in) begin
+    if (!rst_in && rdy_in && clear_branch_in) begin
+        alloc_free <= `TRUE;
+        grant_if <= `FALSE;
+        grant_lsb_r <= `FALSE;
+        grant_lsb_w <= `FALSE;
+        mem_a_out <= `ZERO;
+        mem_d_out <= `ZERO;
+        mem_wr_out <= `FALSE;
+        alloc_to_lsb_w_en_out <= `FALSE;
+        receive_if <= `FALSE;
+        receive_lsb <= `FALSE;
+        cur_receive_pos <= `ZERO;
+        alloc_to_if_en_out <= `FALSE;
+        alloc_to_lsb_r_en_out <= `FALSE;
     end
 end
     
