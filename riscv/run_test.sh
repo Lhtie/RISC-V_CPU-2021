@@ -9,3 +9,9 @@ if [ -f ./testcase/$@.ans ]; then cp ./testcase/$@.ans ./test/test.ans; fi
 # Example:
 # - iverilog/gtkwave/vivado
 # - diff ./test/test.ans ./test/test.out
+
+cd src
+iverilog *.v common/*/*.v ../sim/*.v -o ../test/a.out
+
+cd ../test
+vvp a.out

@@ -25,4 +25,9 @@ initial begin
   $finish;
 end
 
+initial begin
+  $dumpfile("wave.vcd");
+  $dumpvars(0, testbench);
+end
+
 endmodule
