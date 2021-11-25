@@ -32,16 +32,16 @@ module LSBuffer (
     input   wire [`ROBIdxWidth-1:0]     lsb_to_lsb_rob_pos_in,
     input   wire [`WordWidth-1:0]       lsb_to_lsb_res_in,
 
-    output  reg [`AddrWidth-1:0]        lsb_a_out,
-
     output  reg                         lsb_to_alloc_r_en_out,
     output  reg [`WordBytesWidth-1:0]   lsb_r_offset_out,
+    output  reg [`AddrWidth-1:0]        lsb_r_a_out,
     input   wire                        alloc_to_lsb_r_gr_in,
     input   wire                        alloc_to_lsb_r_en_in,
     input   wire [`WordWidth-1:0]       lsb_d_in,
 
     output  reg                         lsb_to_alloc_w_en_out,
     output  reg [`WordBytesWidth-1:0]   lsb_w_offset_out,
+    output  reg [`AddrWidth-1:0]        lsb_w_a_out,
     output  reg [`WordWidth-1:0]        lsb_d_out,
     input   wire                        alloc_to_lsb_w_gr_in,
     input   wire                        alloc_to_lsb_w_en_in,
@@ -181,7 +181,7 @@ always @(posedge clk_in) begin
                     if (!busy_for_read) begin
                         busy_for_read <= `TRUE;
                         lsb_to_alloc_r_en_out <= `TRUE;
-                        lsb_a_out <= `pos;
+                        lsb_r_a_out <= `pos;
                         case (instr_id_que[head])
                             `LB, `LBU: lsb_r_offset_out <= 0;
                             `LH, `LHU: lsb_r_offset_out <= 1;
@@ -236,7 +236,7 @@ always @(posedge clk_in) begin
                 end
         if (commit_to_lsb_en_in) begin
             lsb_to_alloc_w_en_out <= `TRUE;
-            lsb_a_out <= pos_for_write;
+            lsb_w_a_out <= pos_for_write;
             lsb_d_out <= data_for_write;
             case (write_type)
                 `SB: lsb_w_offset_out <= 0;
@@ -244,30 +244,23 @@ always @(posedge clk_in) begin
                 `SW: lsb_w_offset_out <= 3;
             endcase
         end
-        if (alloc_to_lsb_w_gr_in && busy_for_write)
+        if (alloc_to_lsb_w_gr_in && busy_for_write) begin
             lsb_to_alloc_w_en_out <= `FALSE;
-        if (alloc_to_lsb_w_en_in && busy_for_write) begin
             busy_status[head] <= `FALSE;
             head <= head + `LSBIdxWidth'b1;
             if (issue_to_lsb_en_in)
                 empty <= head == tail;
             else empty <= head + `LSBIdxWidth'b1 == tail;
+        end
+        if (alloc_to_lsb_w_en_in && busy_for_write) begin
             busy_for_write <= `FALSE;
         end
 
         if (clear_branch_in) begin
-            if (busy_for_write) begin
-                empty <= `FALSE;
-                tail <= head + `LSBIdxWidth'b1;
-                busy_status <= `LSBSize'b0;
-                busy_status[head] <= `TRUE;
-            end
-            else begin
-                empty <= `TRUE;
-                head <= `ZERO;
-                tail <= `ZERO;
-                busy_status <= `ZERO;
-            end
+            empty <= `TRUE;
+            head <= `ZERO;
+            tail <= `ZERO;
+            busy_status <= `ZERO;
             busy_for_read <= `FALSE;
             lsb_to_rs_en_out <= `FALSE;
             lsb_to_lsb_en_out <= `FALSE;

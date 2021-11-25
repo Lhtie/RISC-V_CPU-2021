@@ -11,23 +11,23 @@ module Alloc (
     input   wire                        if_to_alloc_en_in,
     input   wire [`AddrWidth-1:0]       if_a_in,
     input   wire [`InstrBytesWidth-1:0] if_offset_in,
-    output  wire                        alloc_to_if_gr_out,
+    output  reg                         alloc_to_if_gr_out,
     output  reg                         alloc_to_if_en_out,
     output  reg [`InstrWidth-1:0]       if_d_out,
 
     // alloc LSB
-    input   wire [`AddrWidth-1:0]       lsb_a_in,
-
     input   wire                        lsb_to_alloc_r_en_in,
     input   wire [`WordBytesWidth-1:0]  lsb_r_offset_in,
-    output  wire                        alloc_to_lsb_r_gr_out,
+    input   wire [`AddrWidth-1:0]       lsb_r_a_in,
+    output  reg                         alloc_to_lsb_r_gr_out,
     output  reg                         alloc_to_lsb_r_en_out,
     output  reg [`WordWidth-1:0]        lsb_d_out,
 
     input   wire                        lsb_to_alloc_w_en_in,
     input   wire [`WordBytesWidth-1:0]  lsb_w_offset_in,
+    input   wire [`AddrWidth-1:0]       lsb_w_a_in,
     input   wire [`WordWidth-1:0]       lsb_d_in,
-    output  wire                        alloc_to_lsb_w_gr_out,
+    output  reg                         alloc_to_lsb_w_gr_out,
     output  reg                         alloc_to_lsb_w_en_out,
 
     input   wire                        clear_branch_in,
@@ -44,13 +44,10 @@ reg                         alloc_free;
 reg                         grant_if, grant_lsb_r, grant_lsb_w;
 reg [`AllocMaxIOWidth-1:0]  cur_send_pos;
 
-assign alloc_to_if_gr_out = grant_if;
-assign alloc_to_lsb_r_gr_out = grant_lsb_r;
-assign alloc_to_lsb_w_gr_out = grant_lsb_w;
-
 `define grantIf\
 begin\
     grant_if <= `TRUE;\
+    alloc_to_if_gr_out <= `TRUE;\
     mem_a_out <= if_a_in;\
     cur_send_pos <= `ZERO;\
     if (if_offset_in != `ZERO)\
@@ -61,7 +58,8 @@ end
 `define grantLsbR\
 begin\
     grant_lsb_r <= `TRUE;\
-    mem_a_out <= lsb_a_in;\
+    alloc_to_lsb_r_gr_out <= `TRUE;\
+    mem_a_out <= lsb_r_a_in;\
     cur_send_pos <= `ZERO;\
     if (lsb_r_offset_in != `ZERO)\
         alloc_free <= `FALSE;\
@@ -71,6 +69,7 @@ end
 `define grantLsbW\
 begin\
     grant_lsb_w <= `TRUE;\
+    alloc_to_lsb_w_gr_out <= `TRUE;\
     cur_send_pos <= `ZERO;\
     alloc_free <= `FALSE;\
     alloc_cyc <= (alloc_cyc + 1) % `AllocCycSize;\
@@ -86,31 +85,39 @@ always @(posedge clk_in) begin
         mem_a_out <= `ZERO;
         mem_d_out <= `ZERO;
         mem_wr_out <= `FALSE;
+        alloc_to_if_gr_out <= `FALSE;
+        alloc_to_lsb_r_gr_out <= `FALSE;
+        alloc_to_lsb_w_gr_out <= `FALSE;
     end
-    else if (rdy_in && alloc_free && !clear_branch_in) begin
-        grant_if <= `FALSE;
-        grant_lsb_r <= `FALSE;
-        grant_lsb_w <= `FALSE;
-        mem_a_out <= `ZERO;
-        mem_d_out <= `ZERO;
-        mem_wr_out <= `FALSE;
-        case (alloc_cyc)
-            2'b00: begin
-                if (if_to_alloc_en_in) `grantIf
-                else if (lsb_to_alloc_r_en_in) `grantLsbR
-                else if (lsb_to_alloc_w_en_in) `grantLsbW
-            end
-            2'b01: begin
-                if (lsb_to_alloc_r_en_in) `grantLsbR
-                else if (lsb_to_alloc_w_en_in) `grantLsbW
-                else if (if_to_alloc_en_in) `grantIf
-            end
-            2'b10: begin
-                if (lsb_to_alloc_w_en_in) `grantLsbW
-                else if (if_to_alloc_en_in) `grantIf
-                else if (lsb_to_alloc_r_en_in) `grantLsbR
-            end
-        endcase
+    else if (rdy_in && !clear_branch_in) begin
+        alloc_to_if_gr_out <= `FALSE;
+        alloc_to_lsb_r_gr_out <= `FALSE;
+        alloc_to_lsb_w_gr_out <= `FALSE;
+        if (alloc_free) begin
+            grant_if <= `FALSE;
+            grant_lsb_r <= `FALSE;
+            grant_lsb_w <= `FALSE;
+            mem_a_out <= `ZERO;
+            mem_d_out <= `ZERO;
+            mem_wr_out <= `FALSE;
+            case (alloc_cyc)
+                2'b00: begin
+                    if (if_to_alloc_en_in) `grantIf
+                    else if (lsb_to_alloc_r_en_in) `grantLsbR
+                    else if (lsb_to_alloc_w_en_in) `grantLsbW
+                end
+                2'b01: begin
+                    if (lsb_to_alloc_r_en_in) `grantLsbR
+                    else if (lsb_to_alloc_w_en_in) `grantLsbW
+                    else if (if_to_alloc_en_in) `grantIf
+                end
+                2'b10: begin
+                    if (lsb_to_alloc_w_en_in) `grantLsbW
+                    else if (if_to_alloc_en_in) `grantIf
+                    else if (lsb_to_alloc_r_en_in) `grantLsbR
+                end
+            endcase
+        end    
     end
 end
 
@@ -119,15 +126,13 @@ end
 always @(posedge clk_in) begin
     if (rst_in) begin
         cur_send_pos <= `ZERO;
-        alloc_to_lsb_w_en_out <= `FALSE;
     end
     else if (rdy_in && !clear_branch_in) begin
-        alloc_to_lsb_w_en_out <= `FALSE;
         if (!alloc_free) begin
-            mem_a_out <= `ZERO;
-            mem_d_out <= `ZERO;
-            mem_wr_out <= `FALSE;
             if (grant_if) begin
+                mem_a_out <= `ZERO;
+                mem_d_out <= `ZERO;
+                mem_wr_out <= `FALSE;
                 if (cur_send_pos < if_offset_in)
                     mem_a_out <= if_a_in + cur_send_pos + 1;
                 cur_send_pos <= cur_send_pos + 1;
@@ -135,16 +140,33 @@ always @(posedge clk_in) begin
                     alloc_free <= `TRUE;
             end
             if (grant_lsb_r) begin
+                mem_a_out <= `ZERO;
+                mem_d_out <= `ZERO;
+                mem_wr_out <= `FALSE;
                 if (cur_send_pos < lsb_r_offset_in)
-                    mem_a_out <= lsb_a_in + cur_send_pos + 1;
+                    mem_a_out <= lsb_r_a_in + cur_send_pos + 1;
                 cur_send_pos <= cur_send_pos + 1;
                 if (cur_send_pos + 1 == lsb_r_offset_in)
                     alloc_free <= `TRUE;
             end
+        end
+    end
+end
+
+always @(posedge clk_in) begin
+    if (rst_in) begin
+        alloc_to_lsb_w_en_out <= `FALSE;
+    end
+    else if (rdy_in) begin
+        alloc_to_lsb_w_en_out <= `FALSE;
+        if (!alloc_free) begin
             if (grant_lsb_w) begin
+                mem_a_out <= `ZERO;
+                mem_d_out <= `ZERO;
+                mem_wr_out <= `FALSE;
                 if (cur_send_pos <= lsb_w_offset_in) begin
                     mem_wr_out <= `TRUE;
-                    mem_a_out <= lsb_a_in + cur_send_pos;
+                    mem_a_out <= lsb_w_a_in + cur_send_pos;
                     case (cur_send_pos)
                         2'b00: mem_d_out <= lsb_d_in[`FirstByte];
                         2'b01: mem_d_out <= lsb_d_in[`SecondByte];
@@ -216,19 +238,22 @@ end
 
 always @(posedge clk_in) begin
     if (!rst_in && rdy_in && clear_branch_in) begin
-        alloc_free <= `TRUE;
+        if (!grant_lsb_w) begin
+            alloc_free <= `TRUE;
+            mem_a_out <= `ZERO;
+            mem_d_out <= `ZERO;
+            mem_wr_out <= `FALSE;
+        end
         grant_if <= `FALSE;
         grant_lsb_r <= `FALSE;
-        grant_lsb_w <= `FALSE;
-        mem_a_out <= `ZERO;
-        mem_d_out <= `ZERO;
-        mem_wr_out <= `FALSE;
-        alloc_to_lsb_w_en_out <= `FALSE;
         receive_if <= `FALSE;
         receive_lsb <= `FALSE;
         cur_receive_pos <= `ZERO;
         alloc_to_if_en_out <= `FALSE;
         alloc_to_lsb_r_en_out <= `FALSE;
+        alloc_to_if_gr_out <= `FALSE;
+        alloc_to_lsb_r_gr_out <= `FALSE;
+        alloc_to_lsb_w_gr_out <= `FALSE;
     end
 end
     

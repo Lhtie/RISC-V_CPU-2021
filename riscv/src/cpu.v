@@ -67,16 +67,16 @@ Alloc alloc0(
   .alloc_to_if_en_out           (alloc_to_if_en),
   .if_d_out                     (alloc_if_d),
 
-  .lsb_a_in                     (lsb_a),
-
   .lsb_to_alloc_r_en_in         (lsb_to_alloc_r_en),
   .lsb_r_offset_in              (lsb_r_offset),
+  .lsb_r_a_in                   (lsb_r_a),
   .alloc_to_lsb_r_gr_out        (alloc_to_lsb_r_gr),
   .alloc_to_lsb_r_en_out        (alloc_to_lsb_r_en),
   .lsb_d_out                    (alloc_lsb_d),
 
   .lsb_to_alloc_w_en_in         (lsb_to_alloc_w_en),
   .lsb_w_offset_in              (lsb_w_offset),
+  .lsb_w_a_in                     (lsb_w_a),
   .lsb_d_in                     (lsb_d),
   .alloc_to_lsb_w_gr_out        (alloc_to_lsb_w_gr),
   .alloc_to_lsb_w_en_out        (alloc_to_lsb_w_en),
@@ -297,11 +297,12 @@ EX ex0(
   .rob_pos_out                  (ex_rob_pos)
 );
 
-wire [`AddrWidth-1:0]           lsb_a;
 wire                            lsb_to_alloc_r_en;
 wire [`WordBytesWidth-1:0]      lsb_r_offset;
+wire [`AddrWidth-1:0]           lsb_r_a;
 wire                            lsb_to_alloc_w_en;
 wire [`WordBytesWidth-1:0]      lsb_w_offset;
+wire [`AddrWidth-1:0]           lsb_w_a;
 wire [`WordWidth-1:0]           lsb_d;
 wire                            lsb_to_rs_en;
 wire                            lsb_to_lsb_en;
@@ -344,16 +345,16 @@ LSBuffer lsb0(
   .lsb_to_lsb_rob_pos_in        (lsb_rob_pos_r),
   .lsb_to_lsb_res_in            (lsb_res),
 
-  .lsb_a_out                    (lsb_a),
-
   .lsb_to_alloc_r_en_out        (lsb_to_alloc_r_en),
   .lsb_r_offset_out             (lsb_r_offset),
+  .lsb_r_a_out                  (lsb_r_a),
   .alloc_to_lsb_r_gr_in         (alloc_to_lsb_r_gr),
   .alloc_to_lsb_r_en_in         (alloc_to_lsb_r_en),
   .lsb_d_in                     (alloc_lsb_d),
   
   .lsb_to_alloc_w_en_out        (lsb_to_alloc_w_en),
   .lsb_w_offset_out             (lsb_w_offset),
+  .lsb_w_a_out                  (lsb_w_a),
   .lsb_d_out                    (lsb_d),
   .alloc_to_lsb_w_gr_in         (alloc_to_lsb_w_gr),
   .alloc_to_lsb_w_en_in         (alloc_to_lsb_w_en),

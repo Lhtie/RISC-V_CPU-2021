@@ -95,6 +95,11 @@ always @(posedge clk_in) begin
     end
 end
 
+integer  fp;
+initial begin
+    fp = $fopen("instr.txt", "w");
+end
+
 always @(posedge clk_in) begin
     if (rst_in) begin
         rob_to_commit_en_out <= `FALSE;
@@ -110,6 +115,7 @@ always @(posedge clk_in) begin
             res_out <= res_que[head];
             jump_en_out <= jump_en_que[head];
             jump_a_out <= jump_a_que[head];
+            $fdisplay(fp, "%h", pc_que[head]);
 
             head <= head % (`ROBSize - 1) + 1;
             if (issue_to_rob_en_in)

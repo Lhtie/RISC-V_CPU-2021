@@ -60,7 +60,7 @@ always @(*) begin
         `SLL: res_out = rs1_in << rs2_in[4:0];
         `SLT: res_out = $signed(rs1_in) < $signed(rs2_in);
         `SLTU: res_out = rs1_in < rs2_in;
-        `XOR: res_out = rs1_in | rs2_in;
+        `XOR: res_out = rs1_in ^ rs2_in;
         `SRL: res_out = rs1_in >> rs2_in[4:0];
         `SRA: res_out = rs1_in >>> rs2_in[4:0];
         `OR: res_out = rs1_in | rs2_in;
