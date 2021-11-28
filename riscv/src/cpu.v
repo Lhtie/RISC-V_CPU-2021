@@ -89,7 +89,6 @@ Alloc alloc0(
   .mem_wr_out                   (mem_wr)
 );
 
-wire                            pc_to_if_en;
 wire [`AddrWidth-1:0]           pc;
 
 PC pc0(
@@ -101,14 +100,39 @@ PC pc0(
   .commit_to_pc_en_in           (commit_to_pc_en),
   .commit_to_pc_in              (commit_pc),
 
-  .pc_to_if_en_out              (pc_to_if_en),
   .pc_out                       (pc)
 );
 
-wire                            if_to_pc_en;
+wire                            icache_to_if_en;
+wire [`InstrWidth-1:0]          icache_to_if_d;
 wire                            if_to_alloc_en;
 wire [`AddrWidth-1:0]           if_a;
 wire [`InstrBytesWidth-1:0]     if_offset;
+
+ICache icache0(
+  .clk_in                       (clk_in),
+  .rst_in                       (rst_in),
+  .rdy_in                       (rdy_in),
+
+  .if_to_icache_en_in           (if_to_icache_en),
+  .if_a_in                      (if_to_icache_a),
+  
+  .icache_to_if_en_out          (icache_to_if_en),
+  .if_d_out                     (icache_to_if_d),
+
+  .if_to_alloc_en_out           (if_to_alloc_en),
+  .if_a_out                     (if_a),
+  .if_offset_out                (if_offset),
+  .alloc_to_if_gr_in            (alloc_to_if_gr),
+  .alloc_to_if_en_in            (alloc_to_if_en),
+  .if_d_in                      (alloc_if_d),
+
+  .clear_branch_in              (clear_branch)
+);
+
+wire                            if_to_pc_en;
+wire                            if_to_icache_en;
+wire [`AddrWidth-1:0]           if_to_icache_a;
 wire [`InstrWidth-1:0]          if_instr;
 wire [`AddrWidth-1:0]           if_pc;
 wire                            if_to_issue_en;
@@ -118,16 +142,13 @@ IF if0(
   .rst_in                       (rst_in),
   .rdy_in                       (rdy_in),
 
-  .pc_to_if_en_in               (pc_to_if_en),
   .pc_in                        (pc),
   .if_to_pc_en_out              (if_to_pc_en),
 
-  .if_to_alloc_en_out           (if_to_alloc_en),
-  .if_a_out                     (if_a),
-  .if_offset_out                (if_offset),
-  .alloc_to_if_gr_in            (alloc_to_if_gr),
-  .alloc_to_if_en_in            (alloc_to_if_en),
-  .if_d_in                      (alloc_if_d),
+  .if_to_icache_en_out          (if_to_icache_en),
+  .if_a_out                     (if_to_icache_a),
+  .icache_to_if_en_in           (icache_to_if_en),
+  .if_d_in                      (icache_to_if_d),
 
   .instr_out                    (if_instr),
   .pc_out                       (if_pc),

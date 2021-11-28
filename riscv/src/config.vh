@@ -17,6 +17,11 @@
 `define WordBytesWidth  2
 `define MemDataWidth    8
 
+`define ICacheTagWidth  24
+`define ICacheEntries   256
+`define InstrTagRange   31:8
+`define InstrIdxRange   7:0
+
 `define AllocCycSize    3
 `define AllocCycWidth   2
 `define AllocMaxIOWidth 2

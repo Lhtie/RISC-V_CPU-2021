@@ -30,8 +30,8 @@ module Regfile (
 reg [`WordWidth-1:0]    regs[`RegSize-1:0];
 reg [`ROBIdxWidth-1:0]  tags[`RegSize-1:0];
 
-wire [`WordWidth-1:0]   dbg_regs_1 = regs[1];
-wire [`WordWidth-1:0]   dbg_regs_2 = regs[2];
+wire [`WordWidth-1:0]   dbg_regs_12 = regs[12];
+wire [`WordWidth-1:0]   dbg_regs_16 = regs[16];
 
 integer i;
 

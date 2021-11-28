@@ -1,7 +1,7 @@
 #include "io.h"
 
-int A = 48271;
-int M = 2147483647;
+int A = 223;
+int M = 4213;
 
 int main(){
     outlln(M / A);

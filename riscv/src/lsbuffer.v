@@ -214,6 +214,11 @@ always @(posedge clk_in) begin
     end
 end
 
+integer fp;
+initial begin
+    fp = $fopen("store.txt", "w");
+end
+
 always @(posedge clk_in) begin
     if (rst_in) begin
         busy_for_write <= `FALSE;
@@ -226,7 +231,6 @@ always @(posedge clk_in) begin
             if (q1_que[head] == `ZERO && q2_que[head] == `ZERO)
                 if (instr_id_que[head] > `LHU) begin
                     if (!busy_for_write) begin
-                        busy_for_write <= `TRUE;
                         lsb_to_rob_w_en_out <= `TRUE;
                         rob_pos_w_out <= rob_id_que[head];
                         write_type <= instr_id_que[head];
@@ -235,6 +239,7 @@ always @(posedge clk_in) begin
                     end
                 end
         if (commit_to_lsb_en_in) begin
+            busy_for_write <= `TRUE;
             lsb_to_alloc_w_en_out <= `TRUE;
             lsb_w_a_out <= pos_for_write;
             lsb_d_out <= data_for_write;
@@ -243,18 +248,19 @@ always @(posedge clk_in) begin
                 `SH: lsb_w_offset_out <= 1;
                 `SW: lsb_w_offset_out <= 3;
             endcase
-        end
-        if (alloc_to_lsb_w_gr_in && busy_for_write) begin
-            lsb_to_alloc_w_en_out <= `FALSE;
+
             busy_status[head] <= `FALSE;
             head <= head + `LSBIdxWidth'b1;
             if (issue_to_lsb_en_in)
                 empty <= head == tail;
             else empty <= head + `LSBIdxWidth'b1 == tail;
+
+            $fdisplay(fp, "%h %h %t", pos_for_write, data_for_write, $realtime);
         end
-        if (alloc_to_lsb_w_en_in && busy_for_write) begin
+        if (alloc_to_lsb_w_gr_in && busy_for_write)
+            lsb_to_alloc_w_en_out <= `FALSE;
+        if (alloc_to_lsb_w_en_in && busy_for_write)
             busy_for_write <= `FALSE;
-        end
 
         if (clear_branch_in) begin
             empty <= `TRUE;
@@ -265,6 +271,7 @@ always @(posedge clk_in) begin
             lsb_to_rs_en_out <= `FALSE;
             lsb_to_lsb_en_out <= `FALSE;
             lsb_to_rob_r_en_out <= `FALSE;
+            lsb_to_rob_w_en_out <= `FALSE;
             lsb_to_alloc_r_en_out <= `FALSE;
         end
     end

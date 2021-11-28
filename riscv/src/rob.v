@@ -95,8 +95,9 @@ always @(posedge clk_in) begin
     end
 end
 
-integer  fp;
+integer  fp, counter;
 initial begin
+    counter = 0;
     fp = $fopen("instr.txt", "w");
 end
 
@@ -115,7 +116,12 @@ always @(posedge clk_in) begin
             res_out <= res_que[head];
             jump_en_out <= jump_en_que[head];
             jump_a_out <= jump_a_que[head];
-            $fdisplay(fp, "%h", pc_que[head]);
+
+            // $fdisplay(fp, "%h %h %t", res_que[head], pc_que[head], $realtime);
+            // if (rd_que[head] == 11 && (instr_id_que[head] <= `LHU || instr_id_que[head] >= `LUI && instr_id_que[head] <= `JALR || instr_id_que[head] >= `ADDI)) begin
+            //     counter <= counter + 1;
+            //     $fdisplay(fp, "%h %h", res_que[head], pc_que[head]);
+            // end
 
             head <= head % (`ROBSize - 1) + 1;
             if (issue_to_rob_en_in)

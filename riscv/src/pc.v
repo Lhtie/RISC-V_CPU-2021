@@ -11,8 +11,7 @@ module PC (
     input   wire                    commit_to_pc_en_in,
     input   wire [`AddrWidth-1:0]   commit_to_pc_in,
 
-    output  reg                     pc_to_if_en_out,
-    output  wire [`AddrWidth-1:0]   pc_out
+    output  reg [`AddrWidth-1:0]    pc_out
 );
 
 reg [`AddrWidth-1:0]    pc;
@@ -20,18 +19,19 @@ reg [`AddrWidth-1:0]    pc;
 always @(posedge clk_in) begin
     if (rst_in) begin
         pc <= `ZERO;
-        pc_to_if_en_out <= `TRUE;
+        pc_out <= `ZERO;
     end
     else if (rdy_in) begin
-        pc_to_if_en_out <= `TRUE;
-        if (commit_to_pc_en_in)
+        if (commit_to_pc_en_in) begin
             pc <= commit_to_pc_in;
-        else if (if_to_pc_en_in)
+            pc_out <= commit_to_pc_in;
+        end
+        else if (if_to_pc_en_in) begin
             pc <= pc + `InstrBytes;
-        else pc_to_if_en_out <= `FALSE;
+            pc_out <= pc + `InstrBytes;
+        end
+        else pc_out <= pc;
     end
 end
-
-assign pc_out = pc;
     
 endmodule
