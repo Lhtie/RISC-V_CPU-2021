@@ -61,9 +61,8 @@ always @(posedge clk_in) begin
         // try to issue
         if (issue_to_if_en_in) begin
             head <= head + `IFIdxWidth'b1;
-            if (icache_to_if_en_in)
-                empty <= head == tail;
-            else empty <= head + `IFIdxWidth'b1 == tail;
+            if (!icache_to_if_en_in)
+                empty <= head + `IFIdxWidth'b1 == tail;
             if (head + `IFIdxWidth'b1 != tail) begin
                 if_to_issue_en_out <= `TRUE;
                 instr_out <= fetch_que[head + `IFIdxWidth'b1];

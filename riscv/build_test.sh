@@ -3,8 +3,8 @@ set -e
 prefix='/opt/riscv'
 rpath=$prefix/bin/
 # clearing test dir
-# rm -rf ./test
-# mkdir ./test
+rm -rf ./test
+mkdir ./test
 # compiling rom
 ${rpath}riscv32-unknown-elf-as -o ./sys/rom.o -march=rv32i ./sys/rom.s
 # compiling testcase

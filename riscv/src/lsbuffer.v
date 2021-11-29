@@ -178,7 +178,7 @@ always @(posedge clk_in) begin
         if (!empty)
             if (q1_que[head] == `ZERO && q2_que[head] == `ZERO)
                 if (instr_id_que[head] <= `LHU) begin
-                    if (!busy_for_read) begin
+                    if (!busy_for_read && !busy_for_write) begin
                         busy_for_read <= `TRUE;
                         lsb_to_alloc_r_en_out <= `TRUE;
                         lsb_r_a_out <= `pos;
@@ -192,9 +192,8 @@ always @(posedge clk_in) begin
 
                         busy_status[head] <= `FALSE;
                         head <= head + `LSBIdxWidth'b1;
-                        if (issue_to_lsb_en_in)
-                            empty <= head == tail;
-                        else empty <= head + `LSBIdxWidth'b1 == tail;
+                        if (!issue_to_lsb_en_in)
+                            empty <= head + `LSBIdxWidth'b1 == tail;
                     end
                 end
         if (alloc_to_lsb_r_gr_in && busy_for_read)
@@ -214,9 +213,10 @@ always @(posedge clk_in) begin
     end
 end
 
-integer fp;
+integer  fp, counter;
 initial begin
-    fp = $fopen("store.txt", "w");
+    counter = 0;
+    fp = $fopen("dbg.txt", "w");
 end
 
 always @(posedge clk_in) begin
@@ -230,7 +230,7 @@ always @(posedge clk_in) begin
         if (!empty)
             if (q1_que[head] == `ZERO && q2_que[head] == `ZERO)
                 if (instr_id_que[head] > `LHU) begin
-                    if (!busy_for_write) begin
+                    if (!busy_for_write && !busy_for_read) begin
                         lsb_to_rob_w_en_out <= `TRUE;
                         rob_pos_w_out <= rob_id_que[head];
                         write_type <= instr_id_que[head];
@@ -249,13 +249,13 @@ always @(posedge clk_in) begin
                 `SW: lsb_w_offset_out <= 3;
             endcase
 
+            // counter <= counter + 1;
+            // $fdisplay(fp, "%h %h", pos_for_write, data_for_write);
+
             busy_status[head] <= `FALSE;
             head <= head + `LSBIdxWidth'b1;
-            if (issue_to_lsb_en_in)
-                empty <= head == tail;
-            else empty <= head + `LSBIdxWidth'b1 == tail;
-
-            $fdisplay(fp, "%h %h %t", pos_for_write, data_for_write, $realtime);
+            if (!issue_to_lsb_en_in)
+                empty <= head + `LSBIdxWidth'b1 == tail;
         end
         if (alloc_to_lsb_w_gr_in && busy_for_write)
             lsb_to_alloc_w_en_out <= `FALSE;

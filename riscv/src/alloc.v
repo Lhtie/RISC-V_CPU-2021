@@ -253,7 +253,6 @@ always @(posedge clk_in) begin
         alloc_to_lsb_r_en_out <= `FALSE;
         alloc_to_if_gr_out <= `FALSE;
         alloc_to_lsb_r_gr_out <= `FALSE;
-        alloc_to_lsb_w_gr_out <= `FALSE;
     end
 end
     

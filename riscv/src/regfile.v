@@ -30,8 +30,9 @@ module Regfile (
 reg [`WordWidth-1:0]    regs[`RegSize-1:0];
 reg [`ROBIdxWidth-1:0]  tags[`RegSize-1:0];
 
-wire [`WordWidth-1:0]   dbg_regs_12 = regs[12];
-wire [`WordWidth-1:0]   dbg_regs_16 = regs[16];
+wire [`WordWidth-1:0]   dbg_regs_15 = regs[15];
+wire [`ROBIdxWidth-1:0] dbg_tags_15 = tags[15];
+wire [`WordWidth-1:0]   dbg_regs_11 = regs[11];
 
 integer i;
 
@@ -43,8 +44,6 @@ always @(posedge clk_in) begin
         end
     end
     else if (rdy_in) begin
-        if (issue_to_regfile_en_in)
-            tags[issue_to_regfile_rd_in] <= issue_to_regfile_rob_pos_in;
         if (commit_to_regfile_en_in) begin
             if (commit_to_regfile_instr_id_in <= `LHU || commit_to_regfile_instr_id_in >= `LUI)
                 if (commit_to_regfile_rd_in != `ZERO) begin
@@ -53,6 +52,8 @@ always @(posedge clk_in) begin
                         tags[commit_to_regfile_rd_in] <= 0;
                 end 
         end
+        if (issue_to_regfile_en_in)
+            tags[issue_to_regfile_rd_in] <= issue_to_regfile_rob_pos_in;
         if (clear_branch_in) begin
             for (i = 0; i < `RegSize; i = i + 1) begin
                 tags[i] <= `ZERO;
