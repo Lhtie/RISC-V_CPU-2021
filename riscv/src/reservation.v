@@ -63,7 +63,6 @@ integer i;
 always @(posedge clk_in) begin
     if (rst_in) begin
         busy_status <= `ZERO;
-        has_rdy <= `FALSE;
         rs_to_ex_en_out <= `FALSE;
     end
     else if (rdy_in) begin
@@ -150,7 +149,6 @@ always @(posedge clk_in) begin
 
         if (clear_branch_in) begin
             busy_status <= `ZERO;
-            has_rdy <= `FALSE;
             rs_to_ex_en_out <= `FALSE;
         end
     end
@@ -158,6 +156,7 @@ end
 
 always @(*) begin
     has_rdy = `FALSE;
+    rdy_to_ex = `ZERO;
     for (i = 0; i < `RSSize; i = i + 1)
         if (busy_status[i] && q1[i] == `ZERO && q2[i] == `ZERO) begin
             has_rdy = `TRUE;

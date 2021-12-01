@@ -27,6 +27,7 @@ assign jalr_jump_a[0] = 1'b0;
 always @(*) begin
     res_out = {`ImmWidth{1'b0}};
     jump_en_out = `FALSE;
+    jump_a_out = `ZERO;
     rob_pos_out = rob_pos_in;
     case (instr_id_in)
         `BEQ, `BNE, `BLT, `BGE, `BLTU, `BGEU:

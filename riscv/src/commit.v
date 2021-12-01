@@ -21,6 +21,7 @@ always @(*) begin
     commit_to_regfile_en_out = `FALSE;
     commit_to_lsb_en_out = `FALSE;
     commit_to_pc_en_out = `FALSE;
+    commit_to_pc_out = `ZERO;
     clear_branch_out = `FALSE;
     if (rob_to_commit_en_in) begin
         if (instr_id_in <= `LHU || instr_id_in >= `LUI && instr_id_in <= `JALR || instr_id_in >= `ADDI) begin

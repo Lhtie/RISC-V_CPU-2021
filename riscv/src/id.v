@@ -17,6 +17,7 @@ reg [`Funct3Width-1:0]  funct3;
 reg [`Funct7Width-1:0]  funct7;
 
 always @(*) begin
+    instr_id_out = `ZERO;
     imm_out = {`ImmWidth{1'b0}};
     rs1_out = instr_in[19:15];
     rs2_out = instr_in[24:20];
