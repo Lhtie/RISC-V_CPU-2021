@@ -54,14 +54,20 @@ reg [`ROBIdxWidth-1:0]      q1[`RSSize-1:0], q2[`RSSize-1:0];
 reg [`WordWidth-1:0]        v1[`RSSize-1:0], v2[`RSSize-1:0];
 reg [`RegIdxWidth-1:0]      rd[`RSSize-1:0];
 reg [`AddrWidth-1:0]        pc[`RSSize-1:0];
+
+reg                         has_rdy;
+reg [`RSIdxWidth-1:0]       rdy_to_ex;
     
 integer i;
 
 always @(posedge clk_in) begin
     if (rst_in) begin
         busy_status <= `ZERO;
+        has_rdy <= `FALSE;
+        rs_to_ex_en_out <= `FALSE;
     end
-    else if (rdy_in && !clear_branch_in) begin
+    else if (rdy_in) begin
+        // expand RS from issue
         if (issue_to_rs_en_in) begin
             busy_status[rs_pos_in] <= `TRUE;
             instr_id[rs_pos_in] <= instr_id_in;
@@ -128,27 +134,8 @@ always @(posedge clk_in) begin
                 end
             end
         end
-    end
-end
 
-reg                     has_rdy;
-reg [`RSIdxWidth-1:0]   rdy_to_ex;
-
-always @(*) begin
-    has_rdy = `FALSE;
-    for (i = 0; i < `RSSize; i = i + 1)
-        if (busy_status[i] && q1[i] == `ZERO && q2[i] == `ZERO) begin
-            has_rdy = `TRUE;
-            rdy_to_ex = i;
-        end
-end
-
-always @(posedge clk_in) begin
-    if (rst_in) begin
-        has_rdy <= `FALSE;
-        rs_to_ex_en_out <= `FALSE;
-    end
-    else if (rdy_in && !clear_branch_in) begin
+        // try to execute
         rs_to_ex_en_out <= `FALSE;
         if (has_rdy) begin
             rs_to_ex_en_out <= `TRUE;
@@ -160,15 +147,22 @@ always @(posedge clk_in) begin
             rob_pos_out <= rob_id[rdy_to_ex];
             busy_status[rdy_to_ex] <= `FALSE;
         end
+
+        if (clear_branch_in) begin
+            busy_status <= `ZERO;
+            has_rdy <= `FALSE;
+            rs_to_ex_en_out <= `FALSE;
+        end
     end
 end
 
-always @(posedge clk_in) begin
-    if (!rst_in && rdy_in && clear_branch_in) begin
-        busy_status <= `ZERO;
-        has_rdy <= `FALSE;
-        rs_to_ex_en_out <= `FALSE;
-    end
+always @(*) begin
+    has_rdy = `FALSE;
+    for (i = 0; i < `RSSize; i = i + 1)
+        if (busy_status[i] && q1[i] == `ZERO && q2[i] == `ZERO) begin
+            has_rdy = `TRUE;
+            rdy_to_ex = i;
+        end
 end
 
 assign rs_to_issue_busy_status_out = busy_status;

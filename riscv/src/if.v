@@ -40,7 +40,8 @@ always @(posedge clk_in) begin
         if_to_issue_en_out <= `FALSE;
         busy_for_read <= `FALSE;
     end
-    else if (rdy_in && !clear_branch_in) begin
+    else if (rdy_in) begin
+        // prepare instr
         if_to_pc_en_out <= `FALSE;
         if_to_issue_en_out <= `FALSE;
         if_to_icache_en_out <= `FALSE;
@@ -77,10 +78,7 @@ always @(posedge clk_in) begin
             end
         end
     end
-end
-
-always @(posedge clk_in) begin
-    if (!rst_in && rdy_in && clear_branch_in) begin
+    if (clear_branch_in) begin
         head <= `ZERO;
         tail <= `ZERO;
         empty <= `TRUE;

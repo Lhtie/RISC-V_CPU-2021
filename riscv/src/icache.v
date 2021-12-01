@@ -34,35 +34,34 @@ always @(posedge clk_in) begin
         icache_to_if_en_out <= `FALSE;
         if_to_alloc_en_out <= `FALSE;
     end
-    else if (rdy_in && !clear_branch_in) begin
-        icache_to_if_en_out <= `FALSE;
-        if (if_to_icache_en_in) begin
-            if (ready[if_a_in[`InstrIdxRange]] && tags[if_a_in[`InstrIdxRange]] == if_a_in[`InstrTagRange]) begin
+    else if (rdy_in) begin
+        if (!clear_branch_in) begin
+            icache_to_if_en_out <= `FALSE;
+            if (if_to_icache_en_in) begin
+                if (ready[if_a_in[`InstrIdxRange]] && tags[if_a_in[`InstrIdxRange]] == if_a_in[`InstrTagRange]) begin
+                    icache_to_if_en_out <= `TRUE;
+                    if_d_out <= instrs[if_a_in[`InstrIdxRange]];
+                end
+                else begin
+                    if_to_alloc_en_out <= `TRUE;
+                    if_a_out <= if_a_in;
+                end
+            end
+            if (alloc_to_if_gr_in)
+                if_to_alloc_en_out <= `FALSE;
+            if (alloc_to_if_en_in) begin
                 icache_to_if_en_out <= `TRUE;
-                if_d_out <= instrs[if_a_in[`InstrIdxRange]];
-            end
-            else begin
-                if_to_alloc_en_out <= `TRUE;
-                if_a_out <= if_a_in;
+                if_d_out <= if_d_in;
+                
+                ready[if_a_in[`InstrIdxRange]] <= `TRUE;
+                tags[if_a_in[`InstrIdxRange]] <= if_a_in[`InstrTagRange];
+                instrs[if_a_in[`InstrIdxRange]] <= if_d_in;
             end
         end
-        if (alloc_to_if_gr_in)
+        else begin
+            icache_to_if_en_out <= `FALSE;
             if_to_alloc_en_out <= `FALSE;
-        if (alloc_to_if_en_in) begin
-            icache_to_if_en_out <= `TRUE;
-            if_d_out <= if_d_in;
-            
-            ready[if_a_in[`InstrIdxRange]] <= `TRUE;
-            tags[if_a_in[`InstrIdxRange]] <= if_a_in[`InstrTagRange];
-            instrs[if_a_in[`InstrIdxRange]] <= if_d_in;
         end
-    end
-end
-
-always @(posedge clk_in) begin
-    if (!rst_in && rdy_in && clear_branch_in) begin
-        icache_to_if_en_out <= `FALSE;
-        if_to_alloc_en_out <= `FALSE;
     end
 end
 

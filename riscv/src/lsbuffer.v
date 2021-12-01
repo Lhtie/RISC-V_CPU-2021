@@ -101,6 +101,7 @@ always @(posedge clk_in) begin
         lsb_to_alloc_w_en_out <= `FALSE;
     end
     else if (rdy_in) begin
+        // expand LSBuffer from issue
         if (issue_to_lsb_en_in) begin
             tail <= tail + `LSBIdxWidth'b1;
             empty <= `FALSE;
@@ -169,6 +170,7 @@ always @(posedge clk_in) begin
             end
         end
         
+        // try to load
         lsb_to_rs_en_out <= `FALSE;
         lsb_to_lsb_en_out <= `FALSE;
         lsb_to_rob_r_en_out <= `FALSE;
@@ -208,6 +210,7 @@ always @(posedge clk_in) begin
             busy_for_read <= `FALSE;
         end
 
+        // try to write
         lsb_to_rob_w_en_out <= `FALSE;
         if (!empty)
             if (q1_que[head] == `ZERO && q2_que[head] == `ZERO)

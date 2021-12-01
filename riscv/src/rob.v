@@ -68,8 +68,10 @@ always @(posedge clk_in) begin
         head <= `ONE;
         tail <= `ONE;
         stall_status <= `ZERO;
+        rob_to_commit_en_out <= `FALSE;
     end
-    else if (rdy_in && !clear_branch_in) begin
+    else if (rdy_in) begin
+        // expand ROB from issue
         if (issue_to_rob_en_in) begin
             tail <= tail % (`ROBSize - 1) + `ROBIdxWidth'b1;
             empty <= `FALSE;
@@ -92,14 +94,8 @@ always @(posedge clk_in) begin
         end
         if (lsb_to_rob_w_en_in)
             stall_status[lsb_rob_pos_w_in] <= `FALSE;
-    end
-end
 
-always @(posedge clk_in) begin
-    if (rst_in) begin
-        rob_to_commit_en_out <= `FALSE;
-    end
-    else if (rdy_in && !clear_branch_in) begin
+        // try to commit
         rob_to_commit_en_out <= `FALSE;
         if (!empty && !stall_status[head]) begin
             rob_to_commit_en_out <= `TRUE;
@@ -115,16 +111,14 @@ always @(posedge clk_in) begin
             if (!issue_to_rob_en_in)
                 empty <= head % (`ROBSize - 1) + `ROBIdxWidth'b1 == tail;
         end
-    end
-end
 
-always @(posedge clk_in) begin
-    if (!rst_in && rdy_in && clear_branch_in) begin
-        empty <= `TRUE;
-        head <= `ONE;
-        tail <= `ONE;
-        stall_status <= `ZERO;
-        rob_to_commit_en_out <= `FALSE; 
+        if (clear_branch_in) begin
+            empty <= `TRUE;
+            head <= `ONE;
+            tail <= `ONE;
+            stall_status <= `ZERO;
+            rob_to_commit_en_out <= `FALSE; 
+        end
     end
 end
 
