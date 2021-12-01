@@ -74,6 +74,15 @@ reg [`RegIdxWidth-1:0]      rd_que[`LSBSize-1:0];
 reg [`ROBIdxWidth-1:0]      q1_que[`LSBSize-1:0], q2_que[`LSBSize-1:0];
 reg [`WordWidth-1:0]        v1_que[`LSBSize-1:0], v2_que[`LSBSize-1:0];
 
+`define pos (v1_que[head] + imm_que[head]);
+reg                         busy_for_read;
+reg                         busy_for_write;
+reg [`InstrIdWidth-1:0]     read_type;
+reg [`ROBIdxWidth-1:0]      rob_pos_for_read;
+reg [`InstrIdWidth-1:0]     write_type;
+reg [`AddrWidth-1:0]        pos_for_write;
+reg [`WordWidth-1:0]        data_for_write;
+
 integer i;
 
 always @(posedge clk_in) begin
@@ -82,8 +91,16 @@ always @(posedge clk_in) begin
         head <= `ZERO;
         tail <= `ZERO;
         busy_status <= `ZERO;
+        busy_for_read <= `FALSE;
+        lsb_to_rs_en_out <= `FALSE;
+        lsb_to_lsb_en_out <= `FALSE;
+        lsb_to_rob_r_en_out <= `FALSE;
+        lsb_to_alloc_r_en_out <= `FALSE;
+        busy_for_write <= `FALSE;
+        lsb_to_rob_w_en_out <= `FALSE;
+        lsb_to_alloc_w_en_out <= `FALSE;
     end
-    else if (rdy_in && !clear_branch_in) begin
+    else if (rdy_in) begin
         if (issue_to_lsb_en_in) begin
             tail <= tail + `LSBIdxWidth'b1;
             empty <= `FALSE;
@@ -151,27 +168,7 @@ always @(posedge clk_in) begin
                 end
             end
         end
-    end
-end
-
-`define pos (v1_que[head] + imm_que[head]);
-reg                         busy_for_read;
-reg                         busy_for_write;
-reg [`InstrIdWidth-1:0]     read_type;
-reg [`ROBIdxWidth-1:0]      rob_pos_for_read;
-reg [`InstrIdWidth-1:0]     write_type;
-reg [`AddrWidth-1:0]        pos_for_write;
-reg [`WordWidth-1:0]        data_for_write;
-
-always @(posedge clk_in) begin
-    if (rst_in) begin
-        busy_for_read <= `FALSE;
-        lsb_to_rs_en_out <= `FALSE;
-        lsb_to_lsb_en_out <= `FALSE;
-        lsb_to_rob_r_en_out <= `FALSE;
-        lsb_to_alloc_r_en_out <= `FALSE;
-    end
-    else if (rdy_in && !clear_branch_in) begin
+        
         lsb_to_rs_en_out <= `FALSE;
         lsb_to_lsb_en_out <= `FALSE;
         lsb_to_rob_r_en_out <= `FALSE;
@@ -210,22 +207,7 @@ always @(posedge clk_in) begin
             lsb_to_lsb_en_out <= `TRUE;
             busy_for_read <= `FALSE;
         end
-    end
-end
 
-integer  fp, counter;
-initial begin
-    counter = 0;
-    fp = $fopen("dbg.txt", "w");
-end
-
-always @(posedge clk_in) begin
-    if (rst_in) begin
-        busy_for_write <= `FALSE;
-        lsb_to_rob_w_en_out <= `FALSE;
-        lsb_to_alloc_w_en_out <= `FALSE;
-    end
-    else if (rdy_in) begin
         lsb_to_rob_w_en_out <= `FALSE;
         if (!empty)
             if (q1_que[head] == `ZERO && q2_que[head] == `ZERO)
@@ -248,9 +230,6 @@ always @(posedge clk_in) begin
                 `SH: lsb_w_offset_out <= 1;
                 `SW: lsb_w_offset_out <= 3;
             endcase
-
-            // counter <= counter + 1;
-            // $fdisplay(fp, "%h %h", pos_for_write, data_for_write);
 
             busy_status[head] <= `FALSE;
             head <= head + `LSBIdxWidth'b1;

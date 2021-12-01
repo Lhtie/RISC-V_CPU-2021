@@ -95,12 +95,6 @@ always @(posedge clk_in) begin
     end
 end
 
-integer  fp, counter;
-initial begin
-    counter = 0;
-    fp = $fopen("dbg.txt", "w");
-end
-
 always @(posedge clk_in) begin
     if (rst_in) begin
         rob_to_commit_en_out <= `FALSE;
@@ -116,13 +110,6 @@ always @(posedge clk_in) begin
             res_out <= res_que[head];
             jump_en_out <= jump_en_que[head];
             jump_a_out <= jump_a_que[head];
-
-            // $fdisplay(fp, "%h", pc_que[head]);
-            // counter <= counter + 1;
-            // if ((instr_id_que[head] <= `LHU || instr_id_que[head] >= `LUI && instr_id_que[head] <= `JALR || instr_id_que[head] >= `ADDI)) begin
-            //     counter <= counter + 1;
-            //     $fdisplay(fp, "%h %h", rd_que[head], res_que[head]);
-            // end
 
             head <= head % (`ROBSize - 1) + `ROBIdxWidth'b1;
             if (!issue_to_rob_en_in)

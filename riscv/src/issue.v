@@ -63,7 +63,7 @@ always @(*) begin
                     issue_to_lsb_en_out = `TRUE;
                     if (instr_id_in <= `LHU)
                         if (rd_in) issue_to_regfile_en_out = `TRUE;
-                    issue_to_rob_en_out <= `TRUE;
+                    issue_to_rob_en_out = `TRUE;
                 end
             end
         end
