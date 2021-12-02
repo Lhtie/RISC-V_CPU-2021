@@ -20,9 +20,7 @@ module EX (
 );
 
 wire [`AddrWidth-1:0]   jump_a = pc_in + imm_in;
-wire [`AddrWidth-1:0]   jalr_jump_a = rs1_in + imm_in;
-
-assign jalr_jump_a[0] = 1'b0;
+wire [`AddrWidth-1:0]   jalr_jump_a = (rs1_in + imm_in) & ~`WordWidth'b1;
 
 always @(*) begin
     res_out = {`ImmWidth{1'b0}};

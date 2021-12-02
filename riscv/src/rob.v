@@ -11,7 +11,6 @@ module ROB (
     input   wire [`ROBIdxWidth-1:0]     issue_rob_pos_in,
     input   wire [`InstrIdWidth-1:0]    instr_id_in,
     input   wire [`RegIdxWidth-1:0]     rd_in,
-    input   wire [`RSIdxWidth-1:0]      rs_pos_in,
     input   wire [`LSBIdxWidth-1:0]     lsb_pos_in,
 
     input   wire                        ex_to_rob_en_in,
@@ -45,22 +44,18 @@ module ROB (
     output  reg                         jump_en_out,
     output  reg [`AddrWidth-1:0]        jump_a_out,
 
-    input   wire                        clear_branch_in,
-
-    input   wire [`AddrWidth-1:0]       pc_in
+    input   wire                        clear_branch_in
 );
 
 reg                     empty;
 reg [`ROBIdxWidth-1:0]  head, tail;
 reg [`ROBSize-1:0]      stall_status;
-reg [`InstrWidth-1:0]   instr_id_que[`ROBSize-1:0];
-reg [`AddrWidth-1:0]    rd_que[`ROBSize-1:0];
-reg [`AddrWidth-1:0]    pc_que[`ROBSize-1:0];
-reg [`RSIdxWidth-1:0]   rs_id_que[`ROBSize-1:0];
-reg [`LSBIdxWidth-1:0]  lsb_id_que[`ROBSize-1:0];
-reg [`WordWidth-1:0]    res_que[`ROBSize-1:0];
-reg                     jump_en_que[`ROBSize-1:0];
-reg [`AddrWidth-1:0]    jump_a_que[`ROBSize-1:0];
+reg [`InstrWidth-1:0]   instr_id_que[`ROBSize-1:1];
+reg [`AddrWidth-1:0]    rd_que[`ROBSize-1:1];
+reg [`LSBIdxWidth-1:0]  lsb_id_que[`ROBSize-1:1];
+reg [`WordWidth-1:0]    res_que[`ROBSize-1:1];
+reg                     jump_en_que[`ROBSize-1:1];
+reg [`AddrWidth-1:0]    jump_a_que[`ROBSize-1:1];
 
 always @(posedge clk_in) begin
     if (rst_in) begin
@@ -78,8 +73,6 @@ always @(posedge clk_in) begin
             stall_status[issue_rob_pos_in] <= `TRUE;
             instr_id_que[issue_rob_pos_in] <= instr_id_in;
             rd_que[issue_rob_pos_in] <= rd_in;
-            pc_que[issue_rob_pos_in] <= pc_in;
-            rs_id_que[issue_rob_pos_in] <= rs_pos_in;
             lsb_id_que[issue_rob_pos_in] <= lsb_pos_in;
         end
         if (ex_to_rob_en_in) begin

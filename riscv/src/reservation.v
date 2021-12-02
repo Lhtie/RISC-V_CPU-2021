@@ -13,7 +13,6 @@ module Reservation (
     input   wire [`ROBIdxWidth-1:0]     rob_pos_in,
     input   wire [`InstrIdWidth-1:0]    instr_id_in,
     input   wire [`ImmWidth-1:0]        imm_in,
-    input   wire [`RegIdxWidth-1:0]     rs1_in, rs2_in, rd_in,
     input   wire [`AddrWidth-1:0]       pc_in,
 
     input   wire [`WordWidth-1:0]       rs1_reg_in,
@@ -52,7 +51,6 @@ reg [`ROBIdxWidth-1:0]      rob_id[`RSSize-1:0];
 reg [`ImmWidth-1:0]         imm[`RSSize-1:0];
 reg [`ROBIdxWidth-1:0]      q1[`RSSize-1:0], q2[`RSSize-1:0];
 reg [`WordWidth-1:0]        v1[`RSSize-1:0], v2[`RSSize-1:0];
-reg [`RegIdxWidth-1:0]      rd[`RSSize-1:0];
 reg [`AddrWidth-1:0]        pc[`RSSize-1:0];
 
 reg                         has_rdy;
@@ -71,7 +69,6 @@ always @(posedge clk_in) begin
             busy_status[rs_pos_in] <= `TRUE;
             instr_id[rs_pos_in] <= instr_id_in;
             imm[rs_pos_in] <= imm_in;
-            rd[rs_pos_in] <= rd_in;
             pc[rs_pos_in] <= pc_in;
             rob_id[rs_pos_in] <= rob_pos_in;
             if (rs1_tag_in == `ZERO) begin

@@ -257,9 +257,6 @@ Reservation rs0(
   .rob_pos_in                   (issue_rob_pos),
   .instr_id_in                  (id_instr_id),
   .imm_in                       (id_imm),
-  .rs1_in                       (id_rs1),
-  .rs2_in                       (id_rs2),
-  .rd_in                        (id_rd),
   .pc_in                        (id_pc),
 
   .rs1_reg_in                   (regfile_rs1_reg),
@@ -345,9 +342,6 @@ LSBuffer lsb0(
   .rob_pos_in                   (issue_rob_pos),
   .instr_id_in                  (id_instr_id),
   .imm_in                       (id_imm),
-  .rs1_in                       (id_rs1),
-  .rs2_in                       (id_rs2),
-  .rd_in                        (id_rd),
 
   .rs1_reg_in                   (regfile_rs1_reg),
   .rs1_tag_in                   (regfile_rs1_tag),
@@ -388,7 +382,6 @@ LSBuffer lsb0(
   .lsb_to_issue_tail_out        (lsb_tail),
 
   .commit_to_lsb_en_in          (commit_to_lsb_en),
-  .commit_to_lsb_lsb_pos_in     (rob_lsb_pos),
 
   .lsb_to_rob_r_en_out          (lsb_to_rob_r_en),
   .lsb_to_rob_w_en_out          (lsb_to_rob_w_en),
@@ -423,8 +416,6 @@ ROB rob0(
   .issue_rob_pos_in             (issue_rob_pos),
   .instr_id_in                  (id_instr_id),
   .rd_in                        (id_rd),
-  .pc_in                        (id_pc),
-  .rs_pos_in                    (issue_rs_pos),
   .lsb_pos_in                   (issue_lsb_pos),
 
   .ex_to_rob_en_in              (ex_to_rob_en),

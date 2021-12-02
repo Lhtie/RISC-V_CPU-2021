@@ -30,10 +30,6 @@ module Regfile (
 reg [`WordWidth-1:0]    regs[`RegSize-1:0];
 reg [`ROBIdxWidth-1:0]  tags[`RegSize-1:0];
 
-wire [`WordWidth-1:0]   dbg_regs_15 = regs[15];
-wire [`ROBIdxWidth-1:0] dbg_tags_15 = tags[15];
-wire [`WordWidth-1:0]   dbg_regs_11 = regs[11];
-
 integer i;
 
 always @(posedge clk_in) begin

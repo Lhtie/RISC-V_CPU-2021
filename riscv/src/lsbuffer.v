@@ -13,7 +13,6 @@ module LSBuffer (
     input   wire [`ROBIdxWidth-1:0]     rob_pos_in,
     input   wire [`InstrIdWidth-1:0]    instr_id_in,
     input   wire [`ImmWidth-1:0]        imm_in,
-    input   wire [`RegIdxWidth-1:0]     rs1_in, rs2_in, rd_in,
 
     input   wire [`WordWidth-1:0]       rs1_reg_in,
     input   wire [`ROBIdxWidth-1:0]     rs1_tag_in,
@@ -53,7 +52,6 @@ module LSBuffer (
     output  wire [`LSBIdxWidth-1:0]     lsb_to_issue_head_out, lsb_to_issue_tail_out,
 
     input   wire                        commit_to_lsb_en_in,
-    input   wire [`LSBIdxWidth-1:0]     commit_to_lsb_lsb_pos_in,
 
     output  reg                         lsb_to_rob_r_en_out,
     output  reg                         lsb_to_rob_w_en_out,
@@ -70,11 +68,10 @@ reg [`LSBSize-1:0]          busy_status;
 reg [`InstrIdWidth-1:0]     instr_id_que[`LSBSize-1:0];
 reg [`ROBIdxWidth-1:0]      rob_id_que[`LSBSize-1:0];
 reg [`ImmWidth-1:0]         imm_que[`LSBSize-1:0];
-reg [`RegIdxWidth-1:0]      rd_que[`LSBSize-1:0];
 reg [`ROBIdxWidth-1:0]      q1_que[`LSBSize-1:0], q2_que[`LSBSize-1:0];
 reg [`WordWidth-1:0]        v1_que[`LSBSize-1:0], v2_que[`LSBSize-1:0];
 
-`define pos (v1_que[head] + imm_que[head]);
+`define pos                 (v1_que[head] + imm_que[head])
 reg                         busy_for_read;
 reg                         busy_for_write;
 reg [`InstrIdWidth-1:0]     read_type;
@@ -109,7 +106,6 @@ always @(posedge clk_in) begin
             instr_id_que[lsb_pos_in] <= instr_id_in;
             rob_id_que[lsb_pos_in] <= rob_pos_in;
             imm_que[lsb_pos_in] <= imm_in;
-            rd_que[lsb_pos_in] <= rd_in;
             if (rs1_tag_in == `ZERO) begin
                 q1_que[lsb_pos_in] <= 0;
                 v1_que[lsb_pos_in] <= rs1_reg_in;
