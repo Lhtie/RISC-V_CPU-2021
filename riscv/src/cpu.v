@@ -90,20 +90,6 @@ Alloc alloc0(
   .mem_wr_out                   (mem_wr)
 );
 
-wire [`AddrWidth-1:0]           pc;
-
-PC pc0(
-  .clk_in                       (clk_in),
-  .rst_in                       (rst_in),
-  .rdy_in                       (rdy_in),
-
-  .if_to_pc_en_in               (if_to_pc_en),
-  .commit_to_pc_en_in           (commit_to_pc_en),
-  .commit_to_pc_in              (commit_pc),
-
-  .pc_out                       (pc)
-);
-
 wire                            icache_to_if_en;
 wire [`InstrWidth-1:0]          icache_to_if_d;
 wire                            if_to_alloc_en;
@@ -136,6 +122,7 @@ wire                            if_to_icache_en;
 wire [`AddrWidth-1:0]           if_to_icache_a;
 wire [`InstrWidth-1:0]          if_instr;
 wire [`AddrWidth-1:0]           if_pc;
+wire                            if_bp;
 wire                            if_to_issue_en;
 
 IF if0(
@@ -143,8 +130,9 @@ IF if0(
   .rst_in                       (rst_in),
   .rdy_in                       (rdy_in),
 
-  .pc_in                        (pc),
-  .if_to_pc_en_out              (if_to_pc_en),
+  .commit_to_if_en_in           (commit_to_if_en),
+  .commit_to_if_pc_in           (commit_to_if_pc),
+  .commit_to_if_bpres_in        (commit_to_if_bpres),
 
   .if_to_icache_en_out          (if_to_icache_en),
   .if_a_out                     (if_to_icache_a),
@@ -153,9 +141,13 @@ IF if0(
 
   .instr_out                    (if_instr),
   .pc_out                       (if_pc),
+  .bp_out                       (if_bp),
 
   .issue_to_if_en_in            (issue_to_if_en),
   .if_to_issue_en_out           (if_to_issue_en),
+
+  .commit_to_pc_en_in           (commit_to_pc_en),
+  .commit_to_pc_in              (commit_pc),
 
   .clear_branch_in              (clear_branch)
 );
@@ -163,18 +155,15 @@ IF if0(
 wire [`InstrIdWidth-1:0]        id_instr_id;
 wire [`ImmWidth-1:0]            id_imm;
 wire [`RegIdxWidth-1:0]         id_rs1, id_rs2, id_rd;
-wire [`AddrWidth-1:0]           id_pc;
 
 ID id0(
   .instr_in                     (if_instr),
-  .pc_in                        (if_pc),
 
   .instr_id_out                 (id_instr_id),
   .imm_out                      (id_imm),
   .rs1_out                      (id_rs1),
   .rs2_out                      (id_rs2),
-  .rd_out                       (id_rd),
-  .pc_out                       (id_pc)
+  .rd_out                       (id_rd)
 );
 
 wire                            issue_to_rs_en;
@@ -258,7 +247,7 @@ Reservation rs0(
   .rob_pos_in                   (issue_rob_pos),
   .instr_id_in                  (id_instr_id),
   .imm_in                       (id_imm),
-  .pc_in                        (id_pc),
+  .pc_in                        (if_pc),
 
   .rs1_reg_in                   (regfile_rs1_reg),
   .rs1_tag_in                   (regfile_rs1_tag),
@@ -410,6 +399,8 @@ wire [`LSBIdxWidth-1:0]         rob_lsb_pos;
 wire [`WordWidth-1:0]           rob_res;
 wire                            rob_jump_en;
 wire [`AddrWidth-1:0]           rob_jump_a;
+wire [`AddrWidth-1:0]           rob_pc;
+wire                            rob_bp;
 wire                            commit_to_lsb_r_io_en;
 
 ROB rob0(
@@ -421,6 +412,8 @@ ROB rob0(
   .issue_rob_pos_in             (issue_rob_pos),
   .instr_id_in                  (id_instr_id),
   .rd_in                        (id_rd),
+  .pc_in                        (if_pc),
+  .bp_in                        (if_bp),
 
   .ex_to_rob_en_in              (ex_to_rob_en),
   .ex_res_in                    (ex_res),
@@ -453,6 +446,8 @@ ROB rob0(
   .res_out                      (rob_res),
   .jump_en_out                  (rob_jump_en),
   .jump_a_out                   (rob_jump_a),
+  .pc_out                       (rob_pc),
+  .bp_out                       (rob_bp),
   .commit_to_lsb_r_io_en_out    (commit_to_lsb_r_io_en),
 
   .clear_branch_in              (clear_branch)
@@ -462,6 +457,9 @@ wire                            commit_to_regfile_en;
 wire                            commit_to_lsb_w_en;
 wire                            commit_to_pc_en;
 wire [`AddrWidth-1:0]           commit_pc;
+wire                            commit_to_if_en;
+wire [`AddrWidth-1:0]           commit_to_if_pc;
+wire                            commit_to_if_bpres;
 wire                            clear_branch;
 
 Commit  commit0(
@@ -470,12 +468,19 @@ Commit  commit0(
   .instr_id_in                  (rob_instr_id),
   .jump_en_in                   (rob_jump_en),
   .jump_a_in                    (rob_jump_a),
+  .pc_in                        (rob_pc),
+  .bp_in                        (rob_bp),
 
   .commit_to_regfile_en_out     (commit_to_regfile_en),
   .commit_to_lsb_w_en_out       (commit_to_lsb_w_en),
   
   .commit_to_pc_en_out          (commit_to_pc_en),
   .commit_to_pc_out             (commit_pc),
+
+  .commit_to_if_en_out          (commit_to_if_en),
+  .commit_to_if_pc_out          (commit_to_if_pc),
+  .commit_to_if_bpres_out       (commit_to_if_bpres),
+
   .clear_branch_out             (clear_branch)
 );
 

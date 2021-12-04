@@ -22,6 +22,10 @@
 `define InstrTagRange   31:8
 `define InstrIdxRange   7:0
 
+`define OpCodeRange     6:0
+`define BpTableSize     512
+`define BpPCIdRange     8:0
+
 `define AllocCycSize    3
 `define AllocCycWidth   2
 `define AllocMaxIOWidth 2

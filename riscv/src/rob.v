@@ -11,6 +11,8 @@ module ROB (
     input   wire [`ROBIdxWidth-1:0]     issue_rob_pos_in,
     input   wire [`InstrIdWidth-1:0]    instr_id_in,
     input   wire [`RegIdxWidth-1:0]     rd_in,
+    input   wire [`AddrWidth-1:0]       pc_in,
+    input   wire                        bp_in,
 
     input   wire                        ex_to_rob_en_in,
     input   wire [`WordWidth-1:0]       ex_res_in,
@@ -42,6 +44,8 @@ module ROB (
     output  reg [`WordWidth-1:0]        res_out,
     output  reg                         jump_en_out,
     output  reg [`AddrWidth-1:0]        jump_a_out,
+    output  reg [`AddrWidth-1:0]        pc_out,
+    output  reg                         bp_out,
     output  reg                         commit_to_lsb_r_io_en_out,
 
     input   wire                        clear_branch_in
@@ -55,6 +59,8 @@ reg [`AddrWidth-1:0]    rd_que[`ROBSize-1:1];
 reg [`WordWidth-1:0]    res_que[`ROBSize-1:1];
 reg                     jump_en_que[`ROBSize-1:1];
 reg [`AddrWidth-1:0]    jump_a_que[`ROBSize-1:1];
+reg [`AddrWidth-1:0]    pc_que[`ROBSize-1:1];
+reg                     bp_que[`ROBSize-1:1];
 
 always @(posedge clk_in) begin
     if (rst_in) begin
@@ -73,6 +79,8 @@ always @(posedge clk_in) begin
             io_read[issue_rob_pos_in] <= `FALSE;
             instr_id_que[issue_rob_pos_in] <= instr_id_in;
             rd_que[issue_rob_pos_in] <= rd_in;
+            pc_que[issue_rob_pos_in] <= pc_in;
+            bp_que[issue_rob_pos_in] <= bp_in;
         end
         if (ex_to_rob_en_in) begin
             res_que[ex_rob_pos_in] <= ex_res_in;
@@ -85,7 +93,7 @@ always @(posedge clk_in) begin
             stall_status[lsb_rob_pos_r_in] <= `FALSE;
         end
         if (lsb_to_rob_r_io_en_in)
-            io_read[lsb_rob_pos_r_in] <= `FALSE;
+            io_read[lsb_rob_pos_r_in] <= `TRUE;
         if (lsb_to_rob_w_en_in)
             stall_status[lsb_rob_pos_w_in] <= `FALSE;
 
@@ -100,6 +108,8 @@ always @(posedge clk_in) begin
             res_out <= res_que[head];
             jump_en_out <= jump_en_que[head];
             jump_a_out <= jump_a_que[head];
+            pc_out <= pc_que[head];
+            bp_out <= bp_que[head];
 
             head <= head % (`ROBSize - 1) + `ROBIdxWidth'b1;
             if (!issue_to_rob_en_in)

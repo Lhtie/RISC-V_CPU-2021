@@ -4,12 +4,10 @@
 
 module ID (
     input   wire [`InstrWidth-1:0]  instr_in,
-    input   wire [`AddrWidth-1:0]   pc_in,
 
     output  reg [`InstrIdWidth-1:0] instr_id_out,
     output  reg [`ImmWidth-1:0]     imm_out,
-    output  reg [`RegIdxWidth-1:0]  rs1_out, rs2_out, rd_out,
-    output  wire [`AddrWidth-1:0]   pc_out
+    output  reg [`RegIdxWidth-1:0]  rs1_out, rs2_out, rd_out
 );
 
 reg [`OpCodeWidth-1:0]  opcode;
@@ -113,7 +111,5 @@ always @(*) begin
         end
     endcase
 end
-
-assign pc_out = pc_in;
 
 endmodule
