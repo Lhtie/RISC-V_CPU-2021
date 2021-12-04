@@ -44,14 +44,14 @@
 
 `define RegSize         32
 `define RegIdxWidth     5
-`define IFQueueSize     64
-`define IFIdxWidth      6
-`define RSSize          32
-`define RSIdxWidth      5
-`define LSBSize         32
-`define LSBIdxWidth     5
-`define ROBSize         64
-`define ROBIdxWidth     6
+`define IFQueueSize     32
+`define IFIdxWidth      5
+`define RSSize          16
+`define RSIdxWidth      4
+`define LSBSize         16
+`define LSBIdxWidth     4
+`define ROBSize         32
+`define ROBIdxWidth     5
 
 `define LB              6'b000000
 `define LH              6'b000001
