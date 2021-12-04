@@ -39,7 +39,7 @@ module ROB (
 
     output  reg                         rob_to_commit_en_out,
     output  reg [`InstrIdWidth-1:0]     instr_id_out,
-    output  reg [`RSIdxWidth-1:0]       rd_out,
+    output  reg [`RegIdxWidth-1:0]      rd_out,
     output  reg [`ROBIdxWidth-1:0]      rob_pos_out,
     output  reg [`WordWidth-1:0]        res_out,
     output  reg                         jump_en_out,

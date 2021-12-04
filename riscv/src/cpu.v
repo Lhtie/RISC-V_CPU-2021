@@ -393,7 +393,7 @@ wire                            rob_rs2_stall;
 wire [`WordWidth-1:0]           rob_rs2_res;
 wire                            rob_to_commit_en;
 wire [`InstrIdWidth-1:0]        rob_instr_id;
-wire [`RSIdxWidth-1:0]          rob_rd;
+wire [`RegIdxWidth-1:0]         rob_rd;
 wire [`ROBIdxWidth-1:0]         rob_rob_pos;
 wire [`LSBIdxWidth-1:0]         rob_lsb_pos;
 wire [`WordWidth-1:0]           rob_res;
