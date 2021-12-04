@@ -44,8 +44,8 @@
 
 `define RegSize         32
 `define RegIdxWidth     5
-`define IFQueueSize     32
-`define IFIdxWidth      5
+`define IFQueueSize     64
+`define IFIdxWidth      6
 `define RSSize          32
 `define RSIdxWidth      5
 `define LSBSize         32

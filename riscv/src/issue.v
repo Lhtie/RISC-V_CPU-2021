@@ -27,21 +27,24 @@ module Issue (
 );
 
 integer i;
+reg     valid;
 
-wire [`RSSize-1:0]  idle = ~rs_busy_status_in;
-wire [`RSSize-1:0]  valid = idle & (-idle);  // lowbit
-
-always @(valid) begin
+always @(*) begin
     rs_pos_out = `ZERO;
+    valid = `FALSE;
     for (i = 0; i < `RSSize; i = i + 1)
-        if (valid[i]) rs_pos_out = i;
+        if (!rs_busy_status_in[i]) begin
+            valid = `TRUE;
+            rs_pos_out = i;
+        end
 end
 
 assign lsb_pos_out = lsb_tail_in;
 assign rob_pos_out = rob_tail_in;
 
 always @(*) begin
-    issue_to_if_en_out = `FALSE;
+    issue_to_if_en_out = (rob_empty_in || rob_head_in != rob_tail_in)
+        && valid && (lsb_empty_in || lsb_head_in != lsb_tail_in);
     issue_to_rs_en_out = `FALSE;
     issue_to_lsb_en_out = `FALSE;
     issue_to_rob_en_out = `FALSE;
@@ -49,8 +52,7 @@ always @(*) begin
     if (if_to_issue_en_in) begin
         if (rob_empty_in || rob_head_in != rob_tail_in) begin
             if (instr_id_in > `SW) begin    // issue to RS
-                if (valid != `ZERO) begin
-                    issue_to_if_en_out = `TRUE;
+                if (valid) begin
                     issue_to_rs_en_out = `TRUE;
                     if (instr_id_in >= `LUI && instr_id_in <= `JALR || instr_id_in >= `ADDI)
                         if (rd_in) issue_to_regfile_en_out = `TRUE;
@@ -59,7 +61,6 @@ always @(*) begin
             end
             else begin                      // issue to LSB
                 if (lsb_empty_in || lsb_head_in != lsb_tail_in) begin
-                    issue_to_if_en_out = `TRUE;
                     issue_to_lsb_en_out = `TRUE;
                     if (instr_id_in <= `LHU)
                         if (rd_in) issue_to_regfile_en_out = `TRUE;

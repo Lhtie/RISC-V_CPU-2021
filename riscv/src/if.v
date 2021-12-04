@@ -87,24 +87,14 @@ always @(posedge clk_in) begin
         end
 
         // try to issue
-        if (issue_to_if_en_in) begin
+        if (!empty && issue_to_if_en_in) begin
+            if_to_issue_en_out <= `TRUE;
+            instr_out <= fetch_que[head];
+            pc_out <= pc_que[head];
+            bp_out <= bp_que[head];
             head <= head + `IFIdxWidth'b1;
             if (!icache_to_if_en_in)
                 empty <= head + `IFIdxWidth'b1 == tail;
-            if (head + `IFIdxWidth'b1 != tail) begin
-                if_to_issue_en_out <= `TRUE;
-                instr_out <= fetch_que[head + `IFIdxWidth'b1];
-                pc_out <= pc_que[head + `IFIdxWidth'b1];
-                bp_out <= bp_que[head + `IFIdxWidth'b1];
-            end
-        end
-        else begin
-            if (!empty) begin
-                if_to_issue_en_out <= `TRUE;
-                instr_out <= fetch_que[head];
-                pc_out <= pc_que[head];
-                bp_out <= bp_que[head];
-            end
         end
 
         // update branch prediction
