@@ -51,9 +51,11 @@ module LSBuffer (
     output  wire                        lsb_to_issue_empty_out,
     output  wire [`LSBIdxWidth-1:0]     lsb_to_issue_head_out, lsb_to_issue_tail_out,
 
-    input   wire                        commit_to_lsb_en_in,
+    input   wire                        commit_to_lsb_r_io_en_in,
+    input   wire                        commit_to_lsb_w_en_in,
 
     output  reg                         lsb_to_rob_r_en_out,
+    output  reg                         lsb_to_rob_r_io_en_out,
     output  reg                         lsb_to_rob_w_en_out,
     output  reg [`WordWidth-1:0]        res_out,
     output  reg [`ROBIdxWidth-1:0]      rob_pos_r_out,
@@ -71,7 +73,8 @@ reg [`ImmWidth-1:0]         imm_que[`LSBSize-1:0];
 reg [`ROBIdxWidth-1:0]      q1_que[`LSBSize-1:0], q2_que[`LSBSize-1:0];
 reg [`WordWidth-1:0]        v1_que[`LSBSize-1:0], v2_que[`LSBSize-1:0];
 
-`define pos                 (v1_que[head] + imm_que[head])
+wire [`AddrWidth-1:0]       pos = v1_que[head] + imm_que[head];
+
 reg                         busy_for_read;
 reg                         busy_for_write;
 reg [`InstrIdWidth-1:0]     read_type;
@@ -170,13 +173,13 @@ always @(posedge clk_in) begin
         lsb_to_rs_en_out <= `FALSE;
         lsb_to_lsb_en_out <= `FALSE;
         lsb_to_rob_r_en_out <= `FALSE;
+        lsb_to_rob_r_io_en_out <= `FALSE;
         if (!empty)
             if (q1_que[head] == `ZERO && q2_que[head] == `ZERO)
                 if (instr_id_que[head] <= `LHU) begin
                     if (!busy_for_read && !busy_for_write) begin
                         busy_for_read <= `TRUE;
-                        lsb_to_alloc_r_en_out <= `TRUE;
-                        lsb_r_a_out <= `pos;
+                        lsb_r_a_out <= pos;
                         case (instr_id_que[head])
                             `LB, `LBU: lsb_r_offset_out <= 0;
                             `LH, `LHU: lsb_r_offset_out <= 1;
@@ -184,6 +187,13 @@ always @(posedge clk_in) begin
                         endcase
                         read_type <= instr_id_que[head];
                         rob_pos_for_read <= rob_id_que[head];
+                        if (pos[17:16] == 2'b11) begin
+                            lsb_to_rob_r_io_en_out <= `TRUE;
+                            rob_pos_r_out <= rob_id_que[head];
+                        end
+                        else begin
+                            lsb_to_alloc_r_en_out <= `TRUE;
+                        end
 
                         busy_status[head] <= `FALSE;
                         head <= head + `LSBIdxWidth'b1;
@@ -205,6 +215,9 @@ always @(posedge clk_in) begin
             lsb_to_lsb_en_out <= `TRUE;
             busy_for_read <= `FALSE;
         end
+        if (commit_to_lsb_r_io_en_in) begin
+            lsb_to_alloc_r_en_out <= `TRUE;
+        end
 
         // try to write
         lsb_to_rob_w_en_out <= `FALSE;
@@ -215,11 +228,11 @@ always @(posedge clk_in) begin
                         lsb_to_rob_w_en_out <= `TRUE;
                         rob_pos_w_out <= rob_id_que[head];
                         write_type <= instr_id_que[head];
-                        pos_for_write <= `pos;
+                        pos_for_write <= pos;
                         data_for_write <= v2_que[head];
                     end
                 end
-        if (commit_to_lsb_en_in) begin
+        if (commit_to_lsb_w_en_in) begin
             busy_for_write <= `TRUE;
             lsb_to_alloc_w_en_out <= `TRUE;
             lsb_w_a_out <= pos_for_write;
@@ -249,6 +262,7 @@ always @(posedge clk_in) begin
             lsb_to_rs_en_out <= `FALSE;
             lsb_to_lsb_en_out <= `FALSE;
             lsb_to_rob_r_en_out <= `FALSE;
+            lsb_to_rob_r_io_en_out <= `FALSE;
             lsb_to_rob_w_en_out <= `FALSE;
             lsb_to_alloc_r_en_out <= `FALSE;
         end

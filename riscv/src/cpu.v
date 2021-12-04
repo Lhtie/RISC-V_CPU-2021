@@ -76,12 +76,13 @@ Alloc alloc0(
 
   .lsb_to_alloc_w_en_in         (lsb_to_alloc_w_en),
   .lsb_w_offset_in              (lsb_w_offset),
-  .lsb_w_a_in                     (lsb_w_a),
+  .lsb_w_a_in                   (lsb_w_a),
   .lsb_d_in                     (lsb_d),
   .alloc_to_lsb_w_gr_out        (alloc_to_lsb_w_gr),
   .alloc_to_lsb_w_en_out        (alloc_to_lsb_w_en),
 
   .clear_branch_in              (clear_branch),
+  .io_buffer_full_in            (io_buffer_full),
 
   .mem_d_in                     (mem_din),
   .mem_a_out                    (mem_a),
@@ -327,6 +328,7 @@ wire                            lsb_to_lsb_en;
 wire                            lsb_empty;
 wire [`LSBIdxWidth-1:0]         lsb_head, lsb_tail;
 wire                            lsb_to_rob_r_en;
+wire                            lsb_to_rob_r_io_en;
 wire                            lsb_to_rob_w_en;
 wire [`WordWidth-1:0]           lsb_res;
 wire [`ROBIdxWidth-1:0]         lsb_rob_pos_r;
@@ -381,9 +383,11 @@ LSBuffer lsb0(
   .lsb_to_issue_head_out        (lsb_head),
   .lsb_to_issue_tail_out        (lsb_tail),
 
-  .commit_to_lsb_en_in          (commit_to_lsb_en),
+  .commit_to_lsb_r_io_en_in     (commit_to_lsb_r_io_en),
+  .commit_to_lsb_w_en_in        (commit_to_lsb_w_en),
 
   .lsb_to_rob_r_en_out          (lsb_to_rob_r_en),
+  .lsb_to_rob_r_io_en_out       (lsb_to_rob_r_io_en),
   .lsb_to_rob_w_en_out          (lsb_to_rob_w_en),
   .res_out                      (lsb_res),
   .rob_pos_r_out                (lsb_rob_pos_r),
@@ -406,6 +410,7 @@ wire [`LSBIdxWidth-1:0]         rob_lsb_pos;
 wire [`WordWidth-1:0]           rob_res;
 wire                            rob_jump_en;
 wire [`AddrWidth-1:0]           rob_jump_a;
+wire                            commit_to_lsb_r_io_en;
 
 ROB rob0(
   .clk_in                       (clk_in),
@@ -416,7 +421,6 @@ ROB rob0(
   .issue_rob_pos_in             (issue_rob_pos),
   .instr_id_in                  (id_instr_id),
   .rd_in                        (id_rd),
-  .lsb_pos_in                   (issue_lsb_pos),
 
   .ex_to_rob_en_in              (ex_to_rob_en),
   .ex_res_in                    (ex_res),
@@ -425,6 +429,7 @@ ROB rob0(
   .ex_rob_pos_in                (ex_rob_pos),
 
   .lsb_to_rob_r_en_in           (lsb_to_rob_r_en),
+  .lsb_to_rob_r_io_en_in        (lsb_to_rob_r_io_en),
   .lsb_to_rob_w_en_in           (lsb_to_rob_w_en),
   .lsb_res_in                   (lsb_res),
   .lsb_rob_pos_r_in             (lsb_rob_pos_r),
@@ -445,16 +450,16 @@ ROB rob0(
   .instr_id_out                 (rob_instr_id),
   .rd_out                       (rob_rd),
   .rob_pos_out                  (rob_rob_pos),
-  .lsb_pos_out                  (rob_lsb_pos),
   .res_out                      (rob_res),
   .jump_en_out                  (rob_jump_en),
   .jump_a_out                   (rob_jump_a),
+  .commit_to_lsb_r_io_en_out    (commit_to_lsb_r_io_en),
 
   .clear_branch_in              (clear_branch)
 );
 
 wire                            commit_to_regfile_en;
-wire                            commit_to_lsb_en;
+wire                            commit_to_lsb_w_en;
 wire                            commit_to_pc_en;
 wire [`AddrWidth-1:0]           commit_pc;
 wire                            clear_branch;
@@ -467,7 +472,7 @@ Commit  commit0(
   .jump_a_in                    (rob_jump_a),
 
   .commit_to_regfile_en_out     (commit_to_regfile_en),
-  .commit_to_lsb_en_out         (commit_to_lsb_en),
+  .commit_to_lsb_w_en_out       (commit_to_lsb_w_en),
   
   .commit_to_pc_en_out          (commit_to_pc_en),
   .commit_to_pc_out             (commit_pc),

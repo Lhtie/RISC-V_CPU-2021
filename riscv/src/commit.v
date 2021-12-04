@@ -10,7 +10,7 @@ module Commit (
     input   wire [`AddrWidth-1:0]       jump_a_in,
 
     output  reg                         commit_to_regfile_en_out,
-    output  reg                         commit_to_lsb_en_out,
+    output  reg                         commit_to_lsb_w_en_out,
 
     output  reg                         commit_to_pc_en_out,
     output  reg [`AddrWidth-1:0]        commit_to_pc_out,
@@ -19,7 +19,7 @@ module Commit (
 
 always @(*) begin
     commit_to_regfile_en_out = `FALSE;
-    commit_to_lsb_en_out = `FALSE;
+    commit_to_lsb_w_en_out = `FALSE;
     commit_to_pc_en_out = `FALSE;
     commit_to_pc_out = `ZERO;
     clear_branch_out = `FALSE;
@@ -34,7 +34,7 @@ always @(*) begin
                 clear_branch_out = `TRUE;
             end
         if (instr_id_in >= `SB && instr_id_in <= `SW) begin
-            commit_to_lsb_en_out = `TRUE;
+            commit_to_lsb_w_en_out = `TRUE;
         end
     end
 end
