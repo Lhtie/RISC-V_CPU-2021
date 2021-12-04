@@ -71,7 +71,7 @@ always @(posedge clk_in) begin
             // branch prediction
             if (if_d_in[`OpCodeRange] == 7'b1101111) begin
                 bp_que[tail] <= `TRUE;
-                pc <= pc + {{11{if_d_in[20]}}, if_d_in[20], if_d_in[19:12], if_d_in[20], if_d_in[30:21], `ZERO};
+                pc <= pc + {{11{if_d_in[31]}}, if_d_in[31], if_d_in[19:12], if_d_in[20], if_d_in[30:21], `ZERO};
             end
             else if (if_d_in[`OpCodeRange] == 7'b1100111) begin
                 bp_que[tail] <= `FALSE;

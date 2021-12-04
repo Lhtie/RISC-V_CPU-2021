@@ -17,10 +17,10 @@
 `define WordBytesWidth  2
 `define MemDataWidth    8
 
-`define ICacheTagWidth  22
-`define ICacheEntries   1024
-`define InstrTagRange   31:10
-`define InstrIdxRange   9:0
+`define ICacheTagWidth  21
+`define ICacheEntries   2048
+`define InstrTagRange   31:11
+`define InstrIdxRange   10:0
 
 `define OpCodeRange     6:0
 `define BpTableSize     1024
