@@ -8,9 +8,9 @@ Passed all testcases provided on FPGA with frequent of 100MHz.
 
 Project Device: `xc7a35ticpg236-1L`
 
-Utilization usage: $83\%$ usage of LUT
+Utilization usage: 83% usage of LUT
 
-Worst Negative Slack: $-1.756ns$
+Worst Negative Slack: -1.756ns
 
 ## Overview
 
