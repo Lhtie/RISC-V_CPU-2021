@@ -77,6 +77,7 @@ wire [`AddrWidth-1:0]       pos = v1_que[head] + imm_que[head];
 
 reg                         busy_for_read;
 reg                         busy_for_write;
+reg                         requested_for_commit;
 reg [`InstrIdWidth-1:0]     read_type;
 reg [`ROBIdxWidth-1:0]      rob_pos_for_read;
 reg [`InstrIdWidth-1:0]     write_type;
@@ -97,6 +98,7 @@ always @(posedge clk_in) begin
         lsb_to_rob_r_en_out <= `FALSE;
         lsb_to_alloc_r_en_out <= `FALSE;
         busy_for_write <= `FALSE;
+        requested_for_commit <= `FALSE;
         lsb_to_rob_w_en_out <= `FALSE;
         lsb_to_alloc_w_en_out <= `FALSE;
     end
@@ -224,8 +226,9 @@ always @(posedge clk_in) begin
         if (!empty)
             if (q1_que[head] == `ZERO && q2_que[head] == `ZERO)
                 if (instr_id_que[head] > `LHU) begin
-                    if (!busy_for_write && !busy_for_read) begin
+                    if (!busy_for_write && !busy_for_read && !requested_for_commit) begin
                         lsb_to_rob_w_en_out <= `TRUE;
+                        requested_for_commit <= `TRUE;
                         rob_pos_w_out <= rob_id_que[head];
                         write_type <= instr_id_que[head];
                         pos_for_write <= pos;
@@ -247,6 +250,7 @@ always @(posedge clk_in) begin
             head <= head + `LSBIdxWidth'b1;
             if (!issue_to_lsb_en_in)
                 empty <= head + `LSBIdxWidth'b1 == tail;
+            requested_for_commit <= `FALSE;
         end
         if (alloc_to_lsb_w_gr_in && busy_for_write)
             lsb_to_alloc_w_en_out <= `FALSE;
@@ -265,6 +269,7 @@ always @(posedge clk_in) begin
             lsb_to_rob_r_io_en_out <= `FALSE;
             lsb_to_rob_w_en_out <= `FALSE;
             lsb_to_alloc_r_en_out <= `FALSE;
+            requested_for_commit <= `FALSE;
         end
     end
 end

@@ -87,14 +87,24 @@ always @(posedge clk_in) begin
         end
 
         // try to issue
-        if (!empty && issue_to_if_en_in) begin
-            if_to_issue_en_out <= `TRUE;
-            instr_out <= fetch_que[head];
-            pc_out <= pc_que[head];
-            bp_out <= bp_que[head];
+        if (issue_to_if_en_in) begin
             head <= head + `IFIdxWidth'b1;
             if (!icache_to_if_en_in)
                 empty <= head + `IFIdxWidth'b1 == tail;
+            if (head + `IFIdxWidth'b1 != tail) begin
+                if_to_issue_en_out <= `TRUE;
+                instr_out <= fetch_que[head + `IFIdxWidth'b1];
+                pc_out <= pc_que[head + `IFIdxWidth'b1];
+                bp_out <= bp_que[head + `IFIdxWidth'b1];
+            end
+        end
+        else begin
+            if (!empty) begin
+                if_to_issue_en_out <= `TRUE;
+                instr_out <= fetch_que[head];
+                pc_out <= pc_que[head];
+                bp_out <= bp_que[head];
+            end
         end
 
         // update branch prediction
@@ -112,14 +122,15 @@ always @(posedge clk_in) begin
         // update pc from commit
         if (commit_to_pc_en_in)
             pc <= commit_to_pc_in;
-    end
-    if (clear_branch_in) begin
-        head <= `ZERO;
-        tail <= `ZERO;
-        empty <= `TRUE;
-        if_to_icache_en_out <= `FALSE;
-        if_to_issue_en_out <= `FALSE;
-        busy_for_read <= `FALSE;
+
+        if (clear_branch_in) begin
+            head <= `ZERO;
+            tail <= `ZERO;
+            empty <= `TRUE;
+            if_to_icache_en_out <= `FALSE;
+            if_to_issue_en_out <= `FALSE;
+            busy_for_read <= `FALSE;
+        end
     end
 end
 

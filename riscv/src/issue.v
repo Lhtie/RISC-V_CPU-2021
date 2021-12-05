@@ -43,29 +43,28 @@ assign lsb_pos_out = lsb_tail_in;
 assign rob_pos_out = rob_tail_in;
 
 always @(*) begin
-    issue_to_if_en_out = (rob_empty_in || rob_head_in != rob_tail_in)
-        && valid && (lsb_empty_in || lsb_head_in != lsb_tail_in);
+    issue_to_if_en_out = `FALSE;
     issue_to_rs_en_out = `FALSE;
     issue_to_lsb_en_out = `FALSE;
     issue_to_rob_en_out = `FALSE;
     issue_to_regfile_en_out = `FALSE;
-    if (if_to_issue_en_in) begin
-        if (rob_empty_in || rob_head_in != rob_tail_in) begin
-            if (instr_id_in > `SW) begin    // issue to RS
-                if (valid) begin
-                    issue_to_rs_en_out = `TRUE;
-                    if (instr_id_in >= `LUI && instr_id_in <= `JALR || instr_id_in >= `ADDI)
-                        if (rd_in) issue_to_regfile_en_out = `TRUE;
-                    issue_to_rob_en_out = `TRUE;
-                end
+    if (rob_empty_in || rob_head_in != rob_tail_in) begin
+        if (instr_id_in > `SW) begin    // issue to RS
+            if (valid) begin
+                issue_to_if_en_out = if_to_issue_en_in;
+                issue_to_rs_en_out = if_to_issue_en_in;
+                if (instr_id_in >= `LUI && instr_id_in <= `JALR || instr_id_in >= `ADDI)
+                    if (rd_in) issue_to_regfile_en_out = if_to_issue_en_in;
+                issue_to_rob_en_out = if_to_issue_en_in;
             end
-            else begin                      // issue to LSB
-                if (lsb_empty_in || lsb_head_in != lsb_tail_in) begin
-                    issue_to_lsb_en_out = `TRUE;
-                    if (instr_id_in <= `LHU)
-                        if (rd_in) issue_to_regfile_en_out = `TRUE;
-                    issue_to_rob_en_out = `TRUE;
-                end
+        end
+        else begin                      // issue to LSB
+            if (lsb_empty_in || lsb_head_in != lsb_tail_in) begin
+                issue_to_if_en_out = if_to_issue_en_in;
+                issue_to_lsb_en_out = if_to_issue_en_in;
+                if (instr_id_in <= `LHU)
+                    if (rd_in) issue_to_regfile_en_out = if_to_issue_en_in;
+                issue_to_rob_en_out = if_to_issue_en_in;
             end
         end
     end
